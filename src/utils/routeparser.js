@@ -286,7 +286,7 @@ export default class routeParser {
           }
 
           if (linkType === null) {
-            BidirectionalInitialWaypointsDone.push(prevwpt);
+            BidirectionalInitialWaypointsDone.push(prevwpt.index);
           }
 
           path = {

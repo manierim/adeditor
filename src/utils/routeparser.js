@@ -223,32 +223,34 @@ export default class routeParser {
     }
 
     let BidirectionalInitialWaypointsDone = [];
+    let doneNodes = [];
 
-    this.waypoints.forEach((wpt) => {
-      if (!wpt.linkedWpts().length || !wpt.isNode()) {
+    let buildPathsForNode = (node) => {
+      if (doneNodes.indexOf(node.index) !== -1) {
         return;
       }
+      doneNodes.push(node.index);
 
       [null, true].forEach((linkType) => {
         // build paths from this node
-        wpt.linksofType[linkType].forEach((linkedNodeIndex) => {
+        node.linksofType[linkType].forEach((linkedNodeIndex) => {
           if (
             BidirectionalInitialWaypointsDone.indexOf(linkedNodeIndex) !== -1
           ) {
             return;
           }
-          let path = [wpt];
-          let wpts = [wpt];
+          let path = [node];
+          let wpts = [node];
 
           let linkedNode = this.waypoints[linkedNodeIndex];
 
           wpts.push(linkedNode);
           path.push(linkedNode);
-          let prevwpt = wpt;
+          let prevwpt = node;
 
           let lastremoved = null;
 
-          while (linkedNode && !linkedNode.isNode()) {
+          while (!linkedNode.isNode() && linkedNode.index !== node.index) {
             prevwpt = linkedNode;
             linkedNode = this.waypoints[
               linkedNode
@@ -292,11 +294,42 @@ export default class routeParser {
           path = {
             bidirectional: linkType === null,
             segments: path.length - 1,
-            d: "M" + path.map((wpt) => [wpt.x, wpt.z].join(",")).join(" L"),
+            d: "M" + path.map((node) => [node.x, node.z].join(",")).join(" L"),
           };
           paths.push(path);
         });
       });
+    };
+
+    let donePathWaypoints = [];
+
+    this.waypoints.forEach((wpt) => {
+      if (
+        !wpt.linkedWpts().length ||
+        donePathWaypoints.indexOf(wpt.index) !== -1
+      ) {
+        return;
+      }
+
+      let start = null;
+      let prev = null;
+
+      while (!wpt.isNode() && wpt.index !== start) {
+        donePathWaypoints.push(wpt.index);
+        if (start === null) {
+          start = wpt.index;
+        }
+
+        let next = wpt.linkedWpts()[0];
+
+        if (prev !== null && next === prev) {
+          next = wpt.linkedWpts()[1];
+        }
+        prev = wpt.index;
+        wpt = this.waypoints[next];
+      }
+
+      buildPathsForNode(wpt);
     });
 
     return paths;

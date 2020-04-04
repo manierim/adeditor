@@ -3,7 +3,6 @@
     <LoadRoute
       :mapSize="mapSize"
       :waypoints="waypoints"
-      :links="links"
       @map-image-change="mapImageURL = $event"
       @route-loaded="routeLoaded"
     />
@@ -11,7 +10,7 @@
       :mapSize="mapSize"
       :mapImageURL="mapImageURL"
       :waypoints="waypoints"
-      :links="links"
+      :paths="paths"
     />
   </div>
 </template>
@@ -24,21 +23,21 @@ export default {
   name: "App",
   components: {
     LoadRoute,
-    Map
+    Map,
   },
   data: () => ({
     mapSize: 2048,
     mapImageURL: null,
     waypoints: [],
-    links: []
+    paths: [],
   }),
   methods: {
-    routeLoaded({ mapSize, waypoints, links }) {
-      this.mapSize = mapSize;
-      this.waypoints = waypoints;
-      this.links = links;
-    }
-  }
+    routeLoaded(parser) {
+      this.mapSize = parser.mapSize;
+      this.waypoints = parser.waypoints;
+      this.paths = parser.paths;
+    },
+  },
 };
 </script>
 

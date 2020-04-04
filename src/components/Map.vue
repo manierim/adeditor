@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-text="paths.length" />
+    <div v-text="'paths:' + paths.length + ' | segments: ' + segments" />
     <svg ref="svgMap">
       <g>
         <polygon
@@ -23,18 +23,18 @@
         <defs>
           <marker
             id="arrow"
-            markerWidth="1"
-            markerHeight="1"
-            refX="-1"
-            refY=".5"
+            markerWidth=".5"
+            markerHeight=".5"
+            refX="-.25"
+            refY=".25"
             orient="auto"
             markerUnits="strokeWidth"
           >
-            <path d="M-.5,-1 L.7,.5 L-.5,2" />
+            <path d="M0,0 L.5,.25 L0,.5" />
           </marker>
         </defs>
         <g v-for="(path, index) in paths" :key="index">
-          <title># {{ index }}</title>
+          <title>path # {{ index }}</title>
           <path
             class="link"
             :class="path.bidirectional ? 'bidirectional' : 'unidirectional'"
@@ -45,17 +45,20 @@
 
       <g class="waypoints">
         <g v-for="(waypoint, index) in waypoints" :key="index">
+          <title>wpt # {{ index }}</title>
           <circle
-            class="waypoint"
-            :class="{ marker: waypoint.marker ? true : false }"
+            :class="[
+              waypoint.isNode() ? 'node' : 'waypoint',
+              { marker: waypoint.marker ? true : false },
+            ]"
             :cx="waypoint.x"
             :cy="waypoint.z"
-            :r="0.7 * (waypoint.marker ? 2 : 1)"
+            :r="waypoint.marker ? 1.4 : waypoint.isNode() ? 0.7 : 0.3"
           />
 
           <text
-            class="label"
             v-if="waypoint.marker"
+            class="marker-label"
             text-anchor="middle"
             :x="waypoint.x"
             :y="waypoint.z - 4"
@@ -79,98 +82,13 @@ export default {
     mapSize: Number,
     mapImageURL: String,
     waypoints: Array,
-    links: Array,
+    paths: Array
   },
   computed: {
-    paths() {
-      let paths = [];
-      const undonelinks = this.links.slice();
-
-      let links;
-
-      while ((links = undonelinks.splice(0, 1)) && links.length) {
-        let current = links[0];
-        let path = [];
-
-        let wptlinkscount = {};
-
-        ["source", "target"].forEach((direction) => {
-          let wptindex = current[direction];
-
-          while (wptindex) {
-            if (direction === "target") {
-              path.push(this.waypoints[wptindex - 1]);
-            } else {
-              path.unshift(this.waypoints[wptindex - 1]);
-            }
-
-            let nextwptindex;
-            let foundIndex;
-
-            if (!wptlinkscount[wptindex]) {
-              wptlinkscount[wptindex] = links.filter(
-                (testlink) =>
-                  testlink.source === wptindex || testlink.target === wptindex
-              );
-            }
-
-            let connected = [];
-
-            if (wptlinkscount[wptindex] === 2) {
-              connected = undonelinks.filter((testlink, index) => {
-                if (
-                  testlink.source === wptindex ||
-                  testlink.target === wptindex
-                ) {
-                  if (testlink.source === wptindex) {
-                    nextwptindex = testlink.target;
-                  } else {
-                    nextwptindex = testlink.source;
-                  }
-                  foundIndex = index;
-                  return true;
-                }
-                return false;
-              });
-            }
-
-            if (
-              connected.length === 1 &&
-              ((current.bidirectional && connected[0].bidirectional) ||
-                (!current.bidirectional &&
-                  nextwptindex === connected[0][direction]))
-            ) {
-              undonelinks.splice(foundIndex, 1);
-              wptindex = nextwptindex;
-            } else {
-              wptindex = null;
-            }
-          }
-        });
-
-        if (
-          !current.bidirectional &&
-          path.length === 2 &&
-          Math.sqrt(
-            Math.pow(path[1].x - path[0].x, 2) +
-              Math.pow(path[1].z - path[0].z, 2)
-          ) > 4.3
-        ) {
-          path.splice(1, 0, {
-            x: path[0].x + (path[1].x - path[0].x) / 2,
-            z: path[0].z + (path[1].z - path[0].z) / 2,
-          });
-        }
-
-        path = {
-          bidirectional: current.bidirectional,
-          d: "M" + path.map((wpt) => [wpt.x, wpt.z].join(",")).join(" L"),
-        };
-
-        paths.push(path);
-      }
-
-      return paths;
+    segments() {
+      return this.paths.reduce((segments, path) => {
+        return segments + path.segments;
+      }, 0);
     },
     mapBoundsPoints() {
       return [
@@ -211,19 +129,25 @@ export default {
   stroke-width: 2;
 }
 
-.waypoints .waypoint {
+.waypoint {
+  fill: transparent;
+  stroke: rgb(78, 64, 63);
+  stroke-width: 0.1;
+}
+
+.node {
   fill: orange;
   stroke: rgb(255, 0, 0);
   stroke-width: 0.3;
 }
 
-.waypoints .marker {
+.marker {
   fill: rgb(4, 0, 255);
   stroke: rgb(0, 225, 255);
   stroke-width: 0.6;
 }
 
-.waypoints .label {
+.marker-label {
   font-size: 10px;
   font-weight: 700;
   fill: rgb(9, 0, 139);
@@ -243,10 +167,11 @@ export default {
 
 .link.unidirectional {
   marker-mid: url(#arrow);
+  marker-start: url(#arrow);
 }
 
 .links marker path {
-  stroke-width: 0.3;
+  stroke-width: 0.1;
   stroke: rgb(6, 77, 6);
   fill: transparent;
 }

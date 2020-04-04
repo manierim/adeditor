@@ -24,7 +24,6 @@
           <span v-if="waypoints.length">
             Waypoints: {{ waypoints.length }}</span
           >
-          <span v-if="links.length"> Links: {{ links.length }} </span>
         </li>
         <li>
           <label for="mapsize">Map Size: </label>
@@ -43,12 +42,11 @@ export default {
   props: {
     mapSize: Number,
     waypoints: Array,
-    links: Array
   },
   data: () => ({
     fileType: null,
     error: null,
-    loading: false
+    loading: false,
   }),
   computed: {
     fileTypeDesc() {
@@ -59,7 +57,7 @@ export default {
         return "Route Manager Exported Route";
       }
       return this.fileType;
-    }
+    },
   },
   methods: {
     loadingError(message) {
@@ -89,8 +87,7 @@ export default {
       let reader = new FileReader();
       let vm = this;
 
-      reader.onload = async e => {
-
+      reader.onload = async (e) => {
         let parser = new routeParser(e.target.result, selectedFile.name);
 
         await parser.parse();
@@ -100,16 +97,12 @@ export default {
           return;
         }
 
-        let mapSize = parser.mapSize;
-        let waypoints = parser.waypoints;
-        let links = parser.registry.links;
-
-        this.$emit("route-loaded", { mapSize, waypoints, links });
+        this.$emit("route-loaded", parser);
         this.loadingStatus(false);
       };
       reader.readAsText(selectedFile);
-    }
-  }
+    },
+  },
 };
 </script>
 

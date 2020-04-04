@@ -1,65 +1,50 @@
 class Waypoint {
-  constructor(x, y, z) {
+  constructor(index, x, y, z) {
+    this.index = index;
     this.x = parseFloat(x);
     this.y = parseFloat(y);
     this.z = parseFloat(z);
     this.marker = null;
-    this._links = {};
+    this.links = {};
   }
 
-  addLinkToNode(toNodeId, isOut) {
-    if (!this._links[toNodeId]) {
-      this._links[toNodeId] = isOut;
+  addLinkToWpt(toNodeIndex, isOut) {
+    this.linksofType = null;
+    if (this.links[toNodeIndex] === undefined) {
+      this.links[toNodeIndex] = isOut;
       return;
     }
 
-    if (this._links[toNodeId] === null || this._links[toNodeId] === isOut) {
+    if (this.links[toNodeIndex] === null || this.links[toNodeIndex] === isOut) {
       return;
     }
 
-    this._links[toNodeId] === null;
+    this.links[toNodeIndex] = null;
   }
 
-  linkedNodes() {
-    return Object.keys(this._links);
-  }
-
-  linkTNodeIsOut(nodeId) {
-    return this._links[nodeId];
-  }
-}
-
-class Link {
-  constructor(source, target) {
-    this.source = source;
-    this.target = target;
-    this.bidirectional = false;
-  }
-}
-
-class LinksList {
-  constructor() {
-    this.links = [];
-    this.registry = {};
-  }
-
-  addLink(source, target) {
-    let a = source;
-    let b = target;
-    if (a > b) {
-      a = target;
-      b = source;
+  isNode() {
+    if (this.linksofType === null) {
+      this.linksofType = {};
+      [false, true, null].forEach((linkType) => {
+        this.linksofType[linkType] = this.linkedWpts().filter(
+          (linkedNodeIndex) => this.linktoWptIsOut(linkedNodeIndex) === linkType
+        );
+      });
     }
-    let key = a + "," + b;
-    if (!this.registry[key]) {
-      this.registry[key] = this.links.length;
-      this.links.push(new Link(source, target));
-    } else {
-      let link = this.links[this.registry[key]];
-      if ((link.source === target) & (link.target === source)) {
-        link.bidirectional = true;
-      }
-    }
+    return !(
+      this.linkedWpts().length === 2 &&
+      (this.linksofType[null].length === 2 ||
+        (this.linksofType[false].length === 1 &&
+          this.linksofType[true].length === 1))
+    );
+  }
+
+  linkedWpts() {
+    return Object.keys(this.links).map((index) => parseInt(index));
+  }
+
+  linktoWptIsOut(index) {
+    return this.links[index];
   }
 }
 
@@ -181,45 +166,26 @@ export default class routeParser {
       if (Math.abs(z[index]) > max) {
         max = Math.abs(z[index]);
       }
-      let wpt = new Waypoint(x[index], y[index], z[index]);
+      let wpt = new Waypoint(
+        this.waypoints.length,
+        x[index],
+        y[index],
+        z[index]
+      );
 
       [ins, outs].forEach((list, listIndex) => {
         list[index].split(",").forEach((nodeIdStr) => {
-          let nodeId = parseInt(nodeIdStr);
-          if (nodeId > 0) {
-            wpt.addLinkToNode(nodeId, listIndex === 1);
+          let nodeIndex = parseInt(nodeIdStr) - 1;
+          if (nodeIndex >= 0) {
+            wpt.addLinkToWpt(nodeIndex, listIndex === 1);
           }
         });
       });
-
       this.waypoints.push(wpt);
     }
 
     let factor = Math.ceil(Math.log(max * 2) / Math.log(2048));
     this.mapSize = factor * 2048;
-
-    this.paths = [];
-
-
-
-    this.registry = new LinksList();
-
-    [ins, outs].forEach((list, listIndex) => {
-      for (let index = 0; index < list.length; index++) {
-        list[index].split(",").forEach(nodeIdStr => {
-          let nodeId = parseInt(nodeIdStr);
-          if (nodeId > 0) {
-            let source = nodeId;
-            let target = index + 1;
-            if (listIndex === 1) {
-              source = target;
-              target = nodeId;
-            }
-            this.registry.addLink(source, target);
-          }
-        });
-      }
-    });
 
     this.markers = [];
 
@@ -245,5 +211,94 @@ export default class routeParser {
     this.markers.forEach((marker) => {
       this.waypoints[marker.index - 1].marker = marker;
     });
+
+    this.paths = this.paths();
+  }
+
+  paths() {
+    let paths = [];
+
+    if (!this.waypoints.length) {
+      return paths;
+    }
+
+    let BidirectionalInitialWaypointsDone = [];
+
+    this.waypoints.forEach((wpt) => {
+      if (!wpt.linkedWpts().length || !wpt.isNode()) {
+        return;
+      }
+
+      [null, true].forEach((linkType) => {
+        // build paths from this node
+        wpt.linksofType[linkType].forEach((linkedNodeIndex) => {
+          if (
+            BidirectionalInitialWaypointsDone.indexOf(linkedNodeIndex) !== -1
+          ) {
+            return;
+          }
+          let path = [wpt];
+          let wpts = [wpt];
+
+          let linkedNode = this.waypoints[linkedNodeIndex];
+
+          wpts.push(linkedNode);
+          path.push(linkedNode);
+          let prevwpt = wpt;
+
+          let lastremoved = null;
+
+          while (linkedNode && !linkedNode.isNode()) {
+            prevwpt = linkedNode;
+            linkedNode = this.waypoints[
+              linkedNode
+                .linkedWpts()
+                .filter((id) => id !== wpts.slice(-2, -1)[0].index)[0]
+            ];
+            wpts.push(linkedNode);
+
+            let beforeLastPathPoint;
+            if (lastremoved) {
+              beforeLastPathPoint = lastremoved;
+            } else {
+              beforeLastPathPoint = path.slice(-2, -1)[0];
+            }
+
+            let midPoint = {
+              x: (linkedNode.x + beforeLastPathPoint.x) / 2,
+              z: (linkedNode.z + beforeLastPathPoint.z) / 2,
+            };
+
+            let lastPathPoint = path.slice(-1)[0];
+
+            let dist = Math.sqrt(
+              Math.pow(midPoint.x - lastPathPoint.x, 2) +
+                Math.pow(midPoint.z - lastPathPoint.z, 2)
+            );
+
+            if (dist < 0.15) {
+              lastremoved = path.splice(-1, 1)[0];
+            } else {
+              lastremoved = null;
+            }
+
+            path.push(linkedNode);
+          }
+
+          if (linkType === null) {
+            BidirectionalInitialWaypointsDone.push(prevwpt);
+          }
+
+          path = {
+            bidirectional: linkType === null,
+            segments: path.length - 1,
+            d: "M" + path.map((wpt) => [wpt.x, wpt.z].join(",")).join(" L"),
+          };
+          paths.push(path);
+        });
+      });
+    });
+
+    return paths;
   }
 }

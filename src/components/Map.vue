@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-text="'paths:' + paths.length + ' | segments: ' + segments" />
-    <svg ref="svgMap">
+    <svg id="svgMap" ref="svgMap">
       <g>
         <polygon
           class="mapbounds"
@@ -119,7 +119,8 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-[ref="svgMap"] {
+#svgMap {
+  border: darkblue 2px solid;
   background-color: lightgray;
 }
 

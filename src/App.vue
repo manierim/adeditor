@@ -1,19 +1,45 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <LoadRoute
+      :mapSize="mapSize"
+      :waypoints="waypoints"
+      :links="links"
+      @map-image-change="mapImageURL = $event"
+      @route-loaded="routeLoaded"
+    />
+    <Map
+      :mapSize="mapSize"
+      :mapImageURL="mapImageURL"
+      :waypoints="waypoints"
+      :links="links"
+    />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import LoadRoute from "./components/LoadRoute";
+import Map from "./components/Map";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HelloWorld
+    LoadRoute,
+    Map
+  },
+  data: () => ({
+    mapSize: 2048,
+    mapImageURL: null,
+    waypoints: [],
+    links: []
+  }),
+  methods: {
+    routeLoaded({ mapSize, waypoints, links }) {
+      this.mapSize = mapSize;
+      this.waypoints = waypoints;
+      this.links = links;
+    }
   }
-}
+};
 </script>
 
 <style>

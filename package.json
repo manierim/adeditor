@@ -9,7 +9,10 @@
   },
   "dependencies": {
     "core-js": "^3.6.4",
-    "vue": "^2.6.11"
+    "hammerjs": "^2.0.8",
+    "svg-pan-zoom": "^3.6.1",
+    "vue": "^2.6.11",
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.2.0",

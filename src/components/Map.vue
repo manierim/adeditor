@@ -1,6 +1,15 @@
 <template>
   <div>
-    <div v-text="'paths:' + paths.length + ' | segments: ' + segments" />
+    <div v-if="debug"
+      v-text="
+        'paths:' +
+        drawnPaths.length +
+        ' | segments: ' +
+        segments.reduced +
+        ' / ' +
+        segments.total
+      "
+    />
     <svg id="svgMap" ref="svgMap">
       <g>
         <polygon
@@ -25,7 +34,7 @@
             id="arrow"
             markerWidth=".5"
             markerHeight=".5"
-            refX="-.25"
+            refX="-.4"
             refY=".25"
             orient="auto"
             markerUnits="strokeWidth"
@@ -33,7 +42,7 @@
             <path d="M0,0 L.5,.25 L0,.5" />
           </marker>
         </defs>
-        <g v-for="(path, index) in paths" :key="index">
+        <g v-for="(path, index) in drawnPaths" :key="index">
           <title>path # {{ index }}</title>
           <path
             class="link"
@@ -53,7 +62,7 @@
             ]"
             :cx="waypoint.x"
             :cy="waypoint.z"
-            :r="waypoint.marker ? 1.4 : waypoint.isNode() ? 0.7 : 0.3"
+            :r="waypoint.marker ? 1.2 : waypoint.isNode() ? 0.5 : 0.3"
           />
 
           <text
@@ -77,18 +86,40 @@ export default {
   name: "Map",
   data: () => ({
     svgHandler: null,
+    debug: false,
   }),
   props: {
     mapSize: Number,
     mapImageURL: String,
     waypoints: Array,
-    paths: Array
+    paths: Array,
   },
   computed: {
+    drawnPaths() {
+      return this.paths.map((path) => {
+        let reduced = this.reducePath(path.wpts);
+
+        return {
+          bidirectional: path.bidirectional,
+          segments: path.wpts.length - 1,
+          reducedsegments: reduced.length - 1,
+          d: "M" + reduced.map((node) => [node.x, node.z].join(",")).join(" L"),
+        };
+      });
+    },
     segments() {
-      return this.paths.reduce((segments, path) => {
-        return segments + path.segments;
-      }, 0);
+      return this.drawnPaths.reduce(
+        (segments, path) => {
+          return {
+            total: segments.total + path.segments,
+            reduced: segments.reduced + path.reducedsegments,
+          };
+        },
+        {
+          total: 0,
+          reduced: 0,
+        }
+      );
     },
     mapBoundsPoints() {
       return [
@@ -99,6 +130,47 @@ export default {
       ].join(" ");
     },
   },
+  methods: {
+    reducePath(wpts) {
+      function dist(point, x, z) {
+        var dx = x - point.x;
+        var dz = z - point.z;
+        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dz, 2));
+      }
+
+      function distToSegment(point, start, end) {
+        var dx = end.x - start.x;
+        var dz = end.z - start.z;
+        var l2 = dx * dx + dz * dz;
+
+        if (l2 == 0) return this.dist(point, start.x, start.z);
+
+        var t = ((point.x - start.x) * dx + (point.z - start.z) * dz) / l2;
+        t = Math.max(0, Math.min(1, t));
+
+        return dist(point, start.x + t * dx, start.z + t * dz);
+      }
+
+      return wpts.reduce((reduced, wpt, wptIndex) => {
+        if (wptIndex < 2) {
+          reduced.push(wpt);
+          return reduced;
+        }
+
+        if (
+          distToSegment(wpts[wptIndex - 1], reduced.slice(-2, -1)[0], wpt) <
+          0.15
+        ) {
+          reduced.splice(-1)[0];
+        }
+
+        reduced.push(wpt);
+
+        return reduced;
+      }, []);
+    },
+  },
+
   watch: {
     mapSize() {
       this.svgHandler.resetZoom();
@@ -145,7 +217,7 @@ export default {
 .marker {
   fill: rgb(4, 0, 255);
   stroke: rgb(0, 225, 255);
-  stroke-width: 0.6;
+  stroke-width: 0.4;
 }
 
 .marker-label {
@@ -158,12 +230,12 @@ export default {
 
 .link {
   fill: none;
-  stroke: rgb(0, 255, 0);
-  stroke-width: 1.7;
+  stroke: rgba(75, 255, 75, 0.7);
+  stroke-width: 1.5;
 }
 
 .link.bidirectional {
-  stroke: rgb(255, 0, 255);
+  stroke: rgba(251, 47, 251, 0.7);
 }
 
 .link.unidirectional {

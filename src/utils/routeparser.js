@@ -239,16 +239,13 @@ export default class routeParser {
           ) {
             return;
           }
-          let path = [node];
           let wpts = [node];
 
           let linkedNode = this.waypoints[linkedNodeIndex];
 
           wpts.push(linkedNode);
-          path.push(linkedNode);
-          let prevwpt = node;
 
-          let lastremoved = null;
+          let prevwpt = node;
 
           while (!linkedNode.isNode() && linkedNode.index !== node.index) {
             prevwpt = linkedNode;
@@ -258,45 +255,16 @@ export default class routeParser {
                 .filter((id) => id !== wpts.slice(-2, -1)[0].index)[0]
             ];
             wpts.push(linkedNode);
-
-            let beforeLastPathPoint;
-            if (lastremoved) {
-              beforeLastPathPoint = lastremoved;
-            } else {
-              beforeLastPathPoint = path.slice(-2, -1)[0];
-            }
-
-            let midPoint = {
-              x: (linkedNode.x + beforeLastPathPoint.x) / 2,
-              z: (linkedNode.z + beforeLastPathPoint.z) / 2,
-            };
-
-            let lastPathPoint = path.slice(-1)[0];
-
-            let dist = Math.sqrt(
-              Math.pow(midPoint.x - lastPathPoint.x, 2) +
-                Math.pow(midPoint.z - lastPathPoint.z, 2)
-            );
-
-            if (dist < 0.15) {
-              lastremoved = path.splice(-1, 1)[0];
-            } else {
-              lastremoved = null;
-            }
-
-            path.push(linkedNode);
           }
 
           if (linkType === null) {
             BidirectionalInitialWaypointsDone.push(prevwpt.index);
           }
 
-          path = {
+          paths.push({
             bidirectional: linkType === null,
-            segments: path.length - 1,
-            d: "M" + path.map((node) => [node.x, node.z].join(",")).join(" L"),
-          };
-          paths.push(path);
+            wpts: wpts,
+          });
         });
       });
     };

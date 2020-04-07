@@ -185,8 +185,10 @@ export default class routeParser {
       waypoints.push(wpt);
     }
 
-    let factor = Math.ceil(Math.log(max * 2) / Math.log(2048));
-    let size = factor * 2048;
+    let size = 2048;
+    if (max) {
+      size = Math.pow(2, Math.ceil(Math.log2(Math.ceil(max / 1024)))) * 2048;
+    }
 
     let markers = [];
 

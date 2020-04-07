@@ -190,7 +190,7 @@ export default class routeParser {
 
     let markers = [];
 
-    if (fileType === "routeManagerExport") {
+    if (fileType === "routeManagerExport" && root.markers) {
       root.markers[0].m.forEach((marker) => {
         markers.push({
           index: parseInt(marker.$.i),
@@ -198,7 +198,9 @@ export default class routeParser {
           folder: marker.$.g,
         });
       });
-    } else {
+    }
+
+    if (fileType === "config" && root.mapmarker) {
       for (const key in root.mapmarker[0]) {
         const marker = root.mapmarker[0][key][0];
         markers.push({

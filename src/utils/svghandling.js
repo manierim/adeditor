@@ -7,7 +7,6 @@ import svgPanZoom from "svg-pan-zoom";
 
 import Hammer from "hammerjs";
 
-let panZoomInstance;
 const panZoomOptions = {
   controlIconsEnabled: true,
   dblClickZoomEnabled: false,
@@ -21,7 +20,7 @@ const panZoomOptions = {
       "touchend",
       "touchmove",
       "touchleave",
-      "touchcancel"
+      "touchcancel",
     ],
 
     // Init custom events handler
@@ -35,7 +34,7 @@ const panZoomOptions = {
       this.hammer = Hammer(options.svgElement, {
         inputClass: Hammer.SUPPORT_POINTER_EVENTS
           ? Hammer.PointerEventInput
-          : Hammer.TouchInput
+          : Hammer.TouchInput,
       });
       // Enable pinch
       this.hammer.get("pinch").set({ enable: true });
@@ -53,7 +52,7 @@ const panZoomOptions = {
         // Pan only the difference
         instance.panBy({
           x: ev.deltaX - pannedX,
-          y: ev.deltaY - pannedY
+          y: ev.deltaY - pannedY,
         });
         pannedX = ev.deltaX;
         pannedY = ev.deltaY;
@@ -65,12 +64,12 @@ const panZoomOptions = {
           initialScale = instance.getZoom();
           instance.zoomAtPoint(initialScale * ev.scale, {
             x: ev.center.x,
-            y: ev.center.y
+            y: ev.center.y,
           });
         }
         instance.zoomAtPoint(initialScale * ev.scale, {
           x: ev.center.x,
-          y: ev.center.y
+          y: ev.center.y,
         });
       });
       // Prevent moving the page on some devices when panning over SVG
@@ -82,33 +81,15 @@ const panZoomOptions = {
     // Destroy custom events handler
     destroy() {
       this.hammer.destroy();
-    }
-  }
+    },
+  },
 };
-
+let instance;
 export default class svghandling {
-  init(svgElement) {
-    this.svgElement = svgElement;
-    this.setMapSize();
-    this.resetZoom();
-  }
-
-  destroyZoomInstance() {
-    if (panZoomInstance) {
-      panZoomInstance.destroy();
-      panZoomInstance = null;
+  constructor(svgElement) {
+    if (instance) {
+      instance.destroy();
     }
-  }
-
-  resetZoom() {
-    this.destroyZoomInstance();
-    panZoomInstance = svgPanZoom(this.svgElement, panZoomOptions);
-  }
-
-  setMapSize() {
-
-    if (panZoomInstance) {
-      panZoomInstance.resize();
-    }
+    instance = svgPanZoom(svgElement, panZoomOptions);
   }
 }

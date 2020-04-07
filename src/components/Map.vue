@@ -84,7 +84,11 @@
     </svg>
 
     <div class="absolute object-left-top text-xs" v-if="debug">
-      <div class="m-2 p-1 bg-gray-200 border border-gray-700 border-solid rounded">Segments drawn: {{ segments.reduced }} of {{ segments.total }}</div>
+      <div
+        class="m-2 p-1 bg-gray-200 border border-gray-700 border-solid rounded"
+      >
+        Segments drawn: {{ segments.reduced }} of {{ segments.total }}
+      </div>
     </div>
   </div>
 </template>
@@ -95,7 +99,6 @@ import svghandling from "../utils/svghandling";
 export default {
   name: "Map",
   data: () => ({
-    svgHandler: null,
     debug: true,
   }),
   props: {
@@ -179,22 +182,8 @@ export default {
     },
   },
 
-  watch: {
-    map(newMap, oldMap) {
-      if (newMap && (!oldMap || oldMap.size !== oldMap.size)) {
-        this.svgHandler.resetZoom();
-      }
-    },
-  },
-  created() {
-    this.svgHandler = new svghandling();
-    // window.addEventListener("resize", this.svgHandler.setMapSize);
-  },
   mounted() {
-    this.svgHandler.init(this.$refs.svgMap);
-  },
-  beforeDestroy() {
-    this.svgHandler.destroyZoomInstance();
+    new svghandling(this.$refs.svgMap);
   },
 };
 </script>

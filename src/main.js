@@ -1,5 +1,8 @@
 import Vue from 'vue'
 import App from './App.vue'
+import './assets/tailwind.css'
+
+require("typeface-roboto");
 
 Vue.config.productionTip = false
 

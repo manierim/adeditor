@@ -1,15 +1,13 @@
 <template>
-  <div class="form">
-    <form>
-      <span>
-        XML file
-        <input @change="getFile" type="file" />
-      </span>
-      <span>
-        Map Image
-        <input @change="getImage" type="file" />
-      </span>
-    </form>
+  <div class="form flex flex-col text-sm p-2">
+    <div class="flex flex-col mb-2">
+      <span class="flex">XML file</span>
+      <input class="flex" @change="getFile" type="file" />
+    </div>
+    <div class="flex flex-col mb-2">
+      <span class="flex">Map Image</span>
+      <input class="flex" @change="getImage" type="file" />
+    </div>
   </div>
 </template>
 

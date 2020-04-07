@@ -1,17 +1,6 @@
 <template>
-  <div>
-    <div
-      v-if="debug"
-      v-text="
-        'paths:' +
-        drawnPaths.length +
-        ' | segments: ' +
-        segments.reduced +
-        ' / ' +
-        segments.total
-      "
-    />
-    <svg id="svgMap" ref="svgMap">
+  <div class="flex flex-grow p-1">
+    <svg class="flex flex-grow" id="svgMap" ref="svgMap">
       <g>
         <polygon
           class="mapbounds"
@@ -93,6 +82,10 @@
         </g>
       </g>
     </svg>
+
+    <div class="absolute object-left-top text-xs" v-if="debug">
+      <div class="m-2 p-1 bg-gray-200 border border-gray-700 border-solid rounded">Segments drawn: {{ segments.reduced }} of {{ segments.total }}</div>
+    </div>
   </div>
 </template>
 
@@ -195,7 +188,7 @@ export default {
   },
   created() {
     this.svgHandler = new svghandling();
-    window.addEventListener("resize", this.svgHandler.setMapSize);
+    // window.addEventListener("resize", this.svgHandler.setMapSize);
   },
   mounted() {
     this.svgHandler.init(this.$refs.svgMap);

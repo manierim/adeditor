@@ -106,32 +106,6 @@ export default class svghandling {
   }
 
   setMapSize() {
-    const parentComputed = window.getComputedStyle(
-      this.svgElement.parentElement
-    );
-    const svgMapRect = this.svgElement.getBoundingClientRect();
-
-    let height =
-      document.documentElement.clientHeight -
-      svgMapRect.y -
-      parseFloat(parentComputed.paddingTop) -
-      parseFloat(parentComputed.paddingBottom);
-
-    if (height < 0) {
-      height = document.documentElement.clientHeight;
-    }
-    this.svgElement.style.height = height + "px";
-
-    let width =
-      document.documentElement.clientWidth -
-      svgMapRect.x -
-      parseFloat(parentComputed.paddingLeft) -
-      parseFloat(parentComputed.paddingRight);
-    if (width < 0) {
-      width = document.documentElement.clientWidth;
-    }
-
-    this.svgElement.style.width = width + "px";
 
     if (panZoomInstance) {
       panZoomInstance.resize();

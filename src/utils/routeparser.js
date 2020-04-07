@@ -6,6 +6,7 @@ class Waypoint {
     this.z = parseFloat(z);
     this.marker = null;
     this.links = {};
+    this.paths = [];
   }
 
   addLinkToWpt(toNodeIndex, isOut) {
@@ -46,6 +47,10 @@ class Waypoint {
   linktoWptIsOut(index) {
     return this.links[index];
   }
+
+  addPath(pathIndex) {
+    this.paths.push(pathIndex);
+  }
 }
 
 export default class routeParser {
@@ -55,7 +60,11 @@ export default class routeParser {
   }
 
   async parse() {
-    this.error = null;
+    let response = {
+      map: null,
+      error: null,
+    };
+
     let parseString = require("xml2js").parseStringPromise;
 
     let result;
@@ -63,61 +72,58 @@ export default class routeParser {
     try {
       result = await parseString(this.xml);
     } catch (err) {
-      this.error = err;
-      return;
+      response.error = err;
+      return response;
     }
 
-    if (this.error) {
-      return;
-    }
-
-    let type = null;
+    let fileType = null;
     let root = null;
+    let mapname = null;
 
     if (result.AutoDrive) {
       root = result.AutoDrive;
-      type = "config";
+      fileType = "config";
 
-      let mapname = this.fileName.match(/^AutoDrive_(.*)_config.xml$/);
+      mapname = this.fileName.match(/^AutoDrive_(.*)_config.xml$/);
       if (mapname.length == 2) {
         mapname = mapname[1];
       } else {
-        this.error =
+        response.error =
           "Could not find map name in " + this.fileName + " filename.";
-        return;
+        return response;
       }
 
       if (!root[mapname]) {
-        this.error = "Could not find " + mapname + " element in xml document.";
-        return;
+        response.error =
+          "Could not find " + mapname + " element in xml document.";
+        return response;
       }
       root = root[mapname][0];
     }
 
     if (result.routeExport) {
       root = result.routeExport;
-      type = "routeManagerExport";
+      fileType = "routeManagerExport";
     }
-    if (!type) {
-      this.error = "Unknown file type";
-      return;
+    if (!fileType) {
+      response.error = "Unknown file type";
+      return response;
     }
-    this.fileType = type;
 
     if (!root.waypoints) {
-      this.error = "Cannot find waypoints";
-      return;
+      response.error = "Cannot find waypoints";
+      return response;
     }
 
     if (!root.waypoints || root.waypoints.length !== 1) {
-      this.error = "Cannot find waypoints";
-      return;
+      response.error = "Cannot find waypoints";
+      return response;
     }
 
     let sep = ",";
     let insNode = "incoming";
 
-    if (type === "routeManagerExport") {
+    if (fileType === "routeManagerExport") {
       sep = ";";
       insNode = "in";
     }
@@ -135,7 +141,7 @@ export default class routeParser {
       z.length !== outs.length ||
       outs.length !== ins.length
     ) {
-      this.error =
+      response.error =
         "x (" +
         x.length +
         "), " +
@@ -152,10 +158,10 @@ export default class routeParser {
         ins.length +
         "), " +
         "data length not coherent";
-      return;
+      return response;
     }
 
-    this.waypoints = [];
+    let waypoints = [];
 
     let max = 0;
 
@@ -166,12 +172,7 @@ export default class routeParser {
       if (Math.abs(z[index]) > max) {
         max = Math.abs(z[index]);
       }
-      let wpt = new Waypoint(
-        this.waypoints.length,
-        x[index],
-        y[index],
-        z[index]
-      );
+      let wpt = new Waypoint(waypoints.length, x[index], y[index], z[index]);
 
       [ins, outs].forEach((list, listIndex) => {
         list[index].split(",").forEach((nodeIdStr) => {
@@ -181,17 +182,17 @@ export default class routeParser {
           }
         });
       });
-      this.waypoints.push(wpt);
+      waypoints.push(wpt);
     }
 
     let factor = Math.ceil(Math.log(max * 2) / Math.log(2048));
-    this.mapSize = factor * 2048;
+    let size = factor * 2048;
 
-    this.markers = [];
+    let markers = [];
 
-    if (type === "routeManagerExport") {
+    if (fileType === "routeManagerExport") {
       root.markers[0].m.forEach((marker) => {
-        this.markers.push({
+        markers.push({
           index: parseInt(marker.$.i),
           name: marker.$.n,
           folder: marker.$.g,
@@ -200,7 +201,7 @@ export default class routeParser {
     } else {
       for (const key in root.mapmarker[0]) {
         const marker = root.mapmarker[0][key][0];
-        this.markers.push({
+        markers.push({
           index: parseInt(marker.id[0]),
           name: marker.name[0],
           folder: marker.group[0],
@@ -208,17 +209,29 @@ export default class routeParser {
       }
     }
 
-    this.markers.forEach((marker) => {
-      this.waypoints[marker.index - 1].marker = marker;
+    markers = markers.map((marker) => {
+      marker.wptIndex = marker.index - 1;
+      marker.wpt = waypoints[marker.wptIndex];
+      marker.wpt.marker = marker;
+      return marker;
     });
 
-    this.paths = this.paths();
+    response.map = {
+      fileType,
+      mapname,
+      size,
+      waypoints,
+      markers,
+      paths: this.buildPaths(waypoints),
+    };
+
+    return response;
   }
 
-  paths() {
+  buildPaths(waypoints) {
     let paths = [];
 
-    if (!this.waypoints.length) {
+    if (!waypoints.length) {
       return paths;
     }
 
@@ -241,7 +254,7 @@ export default class routeParser {
           }
           let wpts = [node];
 
-          let linkedNode = this.waypoints[linkedNodeIndex];
+          let linkedNode = waypoints[linkedNodeIndex];
 
           wpts.push(linkedNode);
 
@@ -249,11 +262,12 @@ export default class routeParser {
 
           while (!linkedNode.isNode() && linkedNode.index !== node.index) {
             prevwpt = linkedNode;
-            linkedNode = this.waypoints[
-              linkedNode
-                .linkedWpts()
-                .filter((id) => id !== wpts.slice(-2, -1)[0].index)[0]
-            ];
+            linkedNode =
+              waypoints[
+                linkedNode
+                  .linkedWpts()
+                  .filter((id) => id !== wpts.slice(-2, -1)[0].index)[0]
+              ];
             wpts.push(linkedNode);
           }
 
@@ -261,7 +275,12 @@ export default class routeParser {
             BidirectionalInitialWaypointsDone.push(prevwpt.index);
           }
 
+          wpts.forEach((wptInPath) => {
+            wptInPath.addPath(paths.length);
+          });
+
           paths.push({
+            index: paths.length,
             bidirectional: linkType === null,
             wpts: wpts,
           });
@@ -271,7 +290,7 @@ export default class routeParser {
 
     let donePathWaypoints = [];
 
-    this.waypoints.forEach((wpt) => {
+    waypoints.forEach((wpt) => {
       if (
         !wpt.linkedWpts().length ||
         donePathWaypoints.indexOf(wpt.index) !== -1
@@ -294,7 +313,7 @@ export default class routeParser {
           next = wpt.linkedWpts()[1];
         }
         prev = wpt.index;
-        wpt = this.waypoints[next];
+        wpt = waypoints[next];
       }
 
       buildPathsForNode(wpt);

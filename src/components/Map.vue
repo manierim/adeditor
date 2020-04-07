@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div v-if="debug"
+    <div
+      v-if="debug"
       v-text="
         'paths:' +
         drawnPaths.length +
@@ -20,12 +21,26 @@
 
         <image
           v-if="mapImageURL"
-          :x="-mapSize / 2"
-          :y="-mapSize / 2"
-          :width="mapSize"
-          :height="mapSize"
+          :x="-map.size / 2"
+          :y="-map.size / 2"
+          :width="map.size"
+          :height="map.size"
           :href="mapImageURL"
         />
+      </g>
+
+      <g class="targets">
+        <text
+          v-for="marker in map.markers"
+          :key="marker.wptIndex"
+          class="marker-label"
+          text-anchor="middle"
+          :x="marker.wpt.x"
+          :y="marker.wpt.z - 4"
+        >
+          {{ marker.name }}
+          <title v-if="marker.folder" v-text="marker.folder" />
+        </text>
       </g>
 
       <g class="links">
@@ -43,7 +58,7 @@
           </marker>
         </defs>
         <g v-for="(path, index) in drawnPaths" :key="index">
-          <title>path # {{ index }}</title>
+          <title v-if="debug">path # {{ index }}</title>
           <path
             class="link"
             :class="path.bidirectional ? 'bidirectional' : 'unidirectional'"
@@ -53,8 +68,19 @@
       </g>
 
       <g class="waypoints">
-        <g v-for="(waypoint, index) in waypoints" :key="index">
-          <title>wpt # {{ index }}</title>
+        <g v-for="(waypoint, index) in map.waypoints" :key="index">
+          <title v-if="debug || waypoint.marker">
+            {{
+              waypoint.marker
+                ? (waypoint.marker.folder
+                    ? waypoint.marker.folder + " / "
+                    : "") +
+                  waypoint.marker.name +
+                  (debug ? " | " : "")
+                : ""
+            }}
+            {{ debug ? "wpt # " + index : "" }}
+          </title>
           <circle
             :class="[
               waypoint.isNode() ? 'node' : 'waypoint',
@@ -63,15 +89,6 @@
             :cx="waypoint.x"
             :cy="waypoint.z"
             :r="waypoint.marker ? 1.2 : waypoint.isNode() ? 0.5 : 0.3"
-          />
-
-          <text
-            v-if="waypoint.marker"
-            class="marker-label"
-            text-anchor="middle"
-            :x="waypoint.x"
-            :y="waypoint.z - 4"
-            v-text="waypoint.marker.name"
           />
         </g>
       </g>
@@ -86,17 +103,15 @@ export default {
   name: "Map",
   data: () => ({
     svgHandler: null,
-    debug: false,
+    debug: true,
   }),
   props: {
-    mapSize: Number,
+    map: Object,
     mapImageURL: String,
-    waypoints: Array,
-    paths: Array,
   },
   computed: {
     drawnPaths() {
-      return this.paths.map((path) => {
+      return this.map.paths.map((path) => {
         let reduced = this.reducePath(path.wpts);
 
         return {
@@ -123,10 +138,10 @@ export default {
     },
     mapBoundsPoints() {
       return [
-        [-this.mapSize / 2, -this.mapSize / 2].join(","),
-        [this.mapSize / 2, -this.mapSize / 2].join(","),
-        [this.mapSize / 2, this.mapSize / 2].join(","),
-        [-this.mapSize / 2, this.mapSize / 2].join(","),
+        [-this.map.size / 2, -this.map.size / 2].join(","),
+        [this.map.size / 2, -this.map.size / 2].join(","),
+        [this.map.size / 2, this.map.size / 2].join(","),
+        [-this.map.size / 2, this.map.size / 2].join(","),
       ].join(" ");
     },
   },
@@ -172,8 +187,10 @@ export default {
   },
 
   watch: {
-    mapSize() {
-      this.svgHandler.resetZoom();
+    map(newMap, oldMap) {
+      if (newMap && (!oldMap || oldMap.size !== oldMap.size)) {
+        this.svgHandler.resetZoom();
+      }
     },
   },
   created() {

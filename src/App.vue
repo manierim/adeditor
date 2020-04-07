@@ -1,17 +1,23 @@
 <template>
   <div id="app">
     <LoadRoute
-      :mapSize="mapSize"
-      :waypoints="waypoints"
+      @loading-status="mapLoading = $event"
       @map-image-change="mapImageURL = $event"
-      @route-loaded="routeLoaded"
+      @map-xml-loaded="mapLoaded"
     />
-    <Map
-      :mapSize="mapSize"
-      :mapImageURL="mapImageURL"
-      :waypoints="waypoints"
-      :paths="paths"
-    />
+    <ul>
+      <li v-if="error"><span v-text="error" /></li>
+      <template v-if="map">
+        <li>
+          <span> Waypoints: {{ map.waypoints.length }}</span>
+        </li>
+        <li>
+          <label for="mapsize">Map Size: </label>
+          <input type="number" id="mapsize" v-model="map.size" />
+        </li>
+      </template>
+    </ul>
+    <Map v-if="!mapLoading && map" :map="map" :mapImageURL="mapImageURL" />
   </div>
 </template>
 
@@ -26,16 +32,32 @@ export default {
     Map,
   },
   data: () => ({
-    mapSize: 2048,
     mapImageURL: null,
-    waypoints: [],
-    paths: [],
+    mapLoading: false,
+    error: null,
+    map: null,
   }),
+  computed: {
+    fileTypeDesc() {
+      if (!this.map) {
+        return;
+      }
+      if (this.map.fileType === "config") {
+        return "Savegame (config file)";
+      }
+      if (this.map.fileType === "routeManagerExport") {
+        return "Route Manager Exported Route";
+      }
+      return this.map.fileType;
+    },
+  },
+
   methods: {
-    routeLoaded(parser) {
-      this.mapSize = parser.mapSize;
-      this.waypoints = parser.waypoints;
-      this.paths = parser.paths;
+    mapLoaded(response) {
+      this.error = response.error;
+      if (response.map) {
+        this.map = response.map;
+      }
     },
   },
 };
@@ -49,5 +71,13 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+input[type="number"] {
+  text-align: center;
+}
+
+#mapsize {
+  width: 5em;
 }
 </style>

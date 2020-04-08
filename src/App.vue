@@ -3,8 +3,8 @@
     <!-- Left Col -->
     <div class="flex flex-grow-0 flex-col items-stretch p-2">
       <Card class="flex-grow-0 mb-2">
-        <template slot="title">
-          <h2>Files</h2>
+        <template #title>
+          Files
         </template>
         <LoadRoute
           @loading-status="mapLoading = $event"
@@ -18,15 +18,15 @@
       </Card>
 
       <template v-if="!mapLoading && map">
-        <Card class="flex-grow mb-2">
-          <template slot="title">
-            <h2>Tools</h2>
+        <Card :collapsable="false" class="flex-grow mb-2">
+          <template #title>
+            Tools
           </template>
         </Card>
 
         <Card class="flex-grow-0">
-          <template slot="title">
-            <h2>Info</h2>
+          <template #title>
+            Info
           </template>
           <div class="flex flex-col text-sm">
             <span class="flex text-center">

@@ -1,7 +1,10 @@
 <template>
   <div id="app" class="flex flex-row h-screen w-screen items-stretch">
     <!-- Left Col -->
-    <div class="flex flex-grow-0 flex-col items-stretch p-2">
+    <div
+      class="flex flex-grow-0 flex-col items-stretch p-2"
+      style="min-width: 265px;"
+    >
       <Card class="flex-grow-0 mb-2">
         <template #title>
           Files

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-grow p-1">
+  <div>
     <svg class="flex flex-grow" id="svgMap" ref="svgMap">
       <g>
         <polygon
@@ -142,6 +142,9 @@ export default {
     },
   },
   methods: {
+    windowResize() {
+      this.handler.resize();
+    },
     reducePath(wpts) {
       function dist(point, x, z) {
         var dx = x - point.x;
@@ -181,19 +184,19 @@ export default {
       }, []);
     },
   },
+  beforeDestroy: function() {
+    window.removeEventListener("resize", this.windowResize);
+  },
 
   mounted() {
-    new svghandling(this.$refs.svgMap);
+    this.handler = new svghandling(this.$refs.svgMap);
+    window.addEventListener("resize", this.windowResize);
   },
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-#svgMap {
-  border: darkblue 2px solid;
-  background-color: lightgray;
-}
 
 .mapbounds {
   fill: white;

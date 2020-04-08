@@ -1,12 +1,12 @@
 <template>
-  <div class="form flex flex-col text-sm p-2">
+  <div class="form flex flex-col text-sm">
     <div class="flex flex-col mb-2">
-      <span class="flex">XML file</span>
-      <input class="flex" @change="getFile" type="file" />
+      <span class="flex text-xs">XML</span>
+      <input :disabled="loading" class="flex text-xs" @change="getFile" type="file" />
     </div>
-    <div class="flex flex-col mb-2">
-      <span class="flex">Map Image</span>
-      <input class="flex" @change="getImage" type="file" />
+    <div class="flex flex-col">
+      <span class="flex text-xs">Image</span>
+      <input class="flex text-xs" @change="getImage" type="file" />
     </div>
   </div>
 </template>

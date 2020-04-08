@@ -92,4 +92,8 @@ export default class svghandling {
     }
     instance = svgPanZoom(svgElement, panZoomOptions);
   }
+
+  resize() {
+    instance.resize();
+  }
 }

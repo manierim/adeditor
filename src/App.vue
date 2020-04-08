@@ -1,47 +1,70 @@
 <template>
-  <div id="app" class="flex flex-row h-screen w-screen">
-    <div class="flex flex-col flex-shrink">
-      <LoadRoute
-        v-show="!mapLoading"
-        @loading-status="mapLoading = $event"
-        @map-image-change="mapImageURL = $event"
-        @map-xml-loaded="mapLoaded"
-      />
+  <div id="app" class="flex flex-row h-screen w-screen items-stretch">
+    <!-- Left Col -->
+    <div class="flex flex-grow-0 flex-col items-stretch p-2">
+      <Card class="flex-grow-0 mb-2">
+        <template slot="title">
+          <h2>Files</h2>
+        </template>
+        <LoadRoute
+          @loading-status="mapLoading = $event"
+          @map-image-change="mapImageURL = $event"
+          @map-xml-loaded="mapLoaded"
+        />
 
-      <div v-if="mapLoading" class="flex flex-row text-sm p-2 mb-2">
-        Loading ...
-      </div>
-
-      <div v-if="error"><span v-text="error" /></div>
+        <div class="flex" v-if="error">
+          <span class="text-red-600 font-bold w-full " v-text="error" />
+        </div>
+      </Card>
 
       <template v-if="!mapLoading && map">
-        <div class="flex flex-row text-sm p-2 mb-2">
-          <span class="flex-1 text-center">
-            <label class="mr-1" for="mapsize">Map Size</label>
-            <input type="number" id="mapsize" list="sizes" v-model="map.size" />
-            <datalist id="sizes">
-              <option
-                v-for="(desc, size) in defaultMapSizes"
-                :key="size"
-                :value="size"
-                v-text="desc"
-              />
-            </datalist>
+        <Card class="flex-grow mb-2">
+          <template slot="title">
+            <h2>Tools</h2>
+          </template>
+        </Card>
 
-            <span v-if="factor" class="ml-1">({{ factor }})</span>
-          </span>
-        </div>
-        <div class="flex flex-row text-sm p-2 mb-2">
-          <span class="flex-1 text-center">
-            Waypoints: {{ map.waypoints.length }}
-          </span>
-          <span class="flex-1 text-center">
-            Paths: {{ map.paths.length }}
-          </span>
-        </div>
+        <Card class="flex-grow-0">
+          <template slot="title">
+            <h2>Info</h2>
+          </template>
+          <div class="flex flex-col text-sm">
+            <span class="flex text-center">
+              <label class="mr-1" for="mapsize">Map Size</label>
+              <input
+                type="number"
+                id="mapsize"
+                list="sizes"
+                v-model="map.size"
+              />
+              <datalist id="sizes">
+                <option
+                  v-for="(desc, size) in defaultMapSizes"
+                  :key="size"
+                  :value="size"
+                  v-text="desc"
+                />
+              </datalist>
+
+              <span v-if="factor" class="ml-1">({{ factor }})</span>
+            </span>
+
+            <span class="flex text-center">
+              Waypoints: {{ map.waypoints.length }}
+            </span>
+            <span class="flex text-center">
+              Paths: {{ map.paths.length }}
+            </span>
+          </div>
+        </Card>
       </template>
     </div>
-    <Map v-if="!mapLoading && map" :map="map" :mapImageURL="mapImageURL" />
+    <Map
+      class="flex flex-grow border border-gray-400 rounded shadow-md m-2 ml-0 p-2"
+      v-if="!mapLoading && map"
+      :map="map"
+      :mapImageURL="mapImageURL"
+    />
   </div>
 </template>
 
@@ -49,9 +72,12 @@
 import LoadRoute from "./components/LoadRoute";
 import Map from "./components/Map";
 
+import Card from "./components/partials/Card";
+
 export default {
   name: "App",
   components: {
+    Card,
     LoadRoute,
     Map,
   },

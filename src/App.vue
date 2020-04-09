@@ -25,6 +25,52 @@
           <template #title>
             Tools
           </template>
+          <div v-if="selection.length" class="flex flex-col text-sm">
+            <h3>Selected items</h3>
+            <ul>
+              <li v-for="(item, index) in selection" :key="index">
+                <template v-if="item.waypoint">
+                  <span>Waypoint # {{ item.waypoint.index }}</span>
+                  <span
+                    v-if="item.waypoint.marker"
+                    v-text="item.waypoint.marker.name"
+                    class="ml-1 font-bold"
+                  />
+                </template>
+              </li>
+            </ul>
+          </div>
+        </Card>
+
+        <Card
+          class="flex-grow-0"
+          v-if="editor && (editor.actions.length || editor.redoables.length)"
+        >
+          <template #title>
+            Undo/Redo
+          </template>
+          <div class="flex flex-row">
+            <div class="flex-1 m-1">
+              <button
+                class="w-full border shadow"
+                @click="undo"
+                v-if="editor.actions.length"
+                :title="editor.actions.slice(-1)[0].label"
+              >
+                Undo
+              </button>
+            </div>
+            <div class="flex-1 m-1">
+              <button
+                class="w-full  border shadow"
+                @click="redo"
+                v-if="editor.redoables.length"
+                :title="editor.redoables.slice(-1)[0].label"
+              >
+                Redo
+              </button>
+            </div>
+          </div>
         </Card>
 
         <Card class="flex-grow-0">
@@ -63,6 +109,7 @@
       </template>
     </div>
     <Map
+      @wpt-click="wptClick"
       class="flex flex-grow border border-gray-400 rounded shadow-md m-2 ml-0 p-2"
       v-if="!mapLoading && map"
       :map="map"
@@ -76,6 +123,7 @@ import LoadRoute from "./components/LoadRoute";
 import Map from "./components/Map";
 
 import Card from "./components/partials/Card";
+import Editor from "./utils/editing";
 
 export default {
   name: "App",
@@ -85,10 +133,10 @@ export default {
     Map,
   },
   data: () => ({
+    editor: null,
     mapImageURL: null,
     mapLoading: false,
     error: null,
-    map: null,
     defaultMapSizes: {
       2048: "default",
       4096: "4x",
@@ -96,6 +144,18 @@ export default {
     },
   }),
   computed: {
+    map() {
+      if (!this.editor) {
+        return null;
+      }
+      return this.editor.map;
+    },
+    selection() {
+      if (!this.editor) {
+        return null;
+      }
+      return this.editor.selection;
+    },
     fileTypeDesc() {
       if (!this.map) {
         return;
@@ -125,8 +185,17 @@ export default {
     mapLoaded(response) {
       this.error = response.error;
       if (response.map) {
-        this.map = response.map;
+        this.editor = new Editor(response.map);
       }
+    },
+    undo() {
+      this.editor.undo();
+    },
+    redo() {
+      this.editor.redo();
+    },
+    wptClick(event) {
+      this.editor.wptClick(event);
     },
   },
 };

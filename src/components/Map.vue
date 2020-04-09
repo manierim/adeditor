@@ -71,6 +71,7 @@
             {{ debug ? "wpt # " + index : "" }}
           </title>
           <circle
+            @click="$emit('wpt-click', { event: $event, waypoint })"
             :class="[
               waypoint.isNode() ? 'node' : 'waypoint',
               { marker: waypoint.marker ? true : false },
@@ -197,7 +198,6 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
 .mapbounds {
   fill: white;
   stroke: rgb(59, 56, 39);
@@ -210,10 +210,19 @@ export default {
   stroke-width: 0.1;
 }
 
+.waypoint:hover {
+  fill: rgb(78, 64, 63);
+}
+
 .node {
   fill: orange;
   stroke: rgb(255, 0, 0);
   stroke-width: 0.3;
+}
+
+.node:hover {
+  fill: rgb(78, 64, 63);
+  stroke: rgb(78, 64, 63);
 }
 
 .marker {
@@ -232,12 +241,18 @@ export default {
 
 .link {
   fill: none;
-  stroke: rgba(75, 255, 75, 0.7);
+  stroke-linecap: round;
+  stroke: rgb(75, 255, 75);
+  stroke-opacity: 0.7;
   stroke-width: 1.5;
 }
 
+.link:hover {
+  stroke-opacity: 1;
+}
+
 .link.bidirectional {
-  stroke: rgba(251, 47, 251, 0.7);
+  stroke: rgb(251, 47, 251);
 }
 
 .link.unidirectional {

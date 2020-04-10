@@ -38,6 +38,23 @@ class actionExecutor {
     this.editor.selection = data;
     return redo;
   }
+  selectionRemoveAtIndex(data, reverse) {
+    console.debug("selectionRemoveAtIndex", data, reverse);
+    if (!reverse) {
+      return {
+        action: "selectionRemoveAtIndex",
+        data: {
+          index: data,
+          item: this.editor.selection.splice(data, 1)[0],
+        },
+      };
+    }
+    this.editor.selection.splice(data.index, 0, data.item);
+    return {
+      action: "selectionRemoveAtIndex",
+      data: data.index,
+    };
+  }
 }
 
 export default class Editor {
@@ -103,13 +120,22 @@ export default class Editor {
       this.selection.length &&
       event.ctrlKey &&
       !event.shiftKey &&
-      !event.altKey &&
-      !this.selection.find((selection) => selection.waypoint === waypoint)
+      !event.altKey
     ) {
-      action = {
-        label: "Add waypoint # " + waypoint.index + " to selection",
-        actions: [this.executor.selectionAdd(item)],
-      };
+      let selectionIndex = this.selection.findIndex(
+        (selection) => selection.waypoint === waypoint
+      );
+      if (selectionIndex !== -1) {
+        action = {
+          label: "Remove waypoint # " + waypoint.index + " from selection",
+          actions: [this.executor.selectionRemoveAtIndex(selectionIndex)],
+        };
+      } else {
+        action = {
+          label: "Add waypoint # " + waypoint.index + " to selection",
+          actions: [this.executor.selectionAdd(item)],
+        };
+      }
     }
 
     if (

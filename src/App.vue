@@ -20,15 +20,18 @@
         </div>
       </Card>
 
-      <template v-if="!mapLoading && map">
+      <template v-if="!mapLoading && editor">
         <Card :collapsable="false" class="flex-grow mb-2">
           <template #title>
             Tools
           </template>
-          <div v-if="selection.length" class="flex flex-col text-sm">
+          <div v-if="editor.selection.length" class="flex flex-col text-sm">
             <h3>Selected items</h3>
             <ul>
-              <li v-for="(item, index) in selection" :key="index">
+              <li
+                v-for="(item, index) in editor.selection.filter((item) => item)"
+                :key="index"
+              >
                 <template v-if="item.waypoint">
                   <span>Waypoint # {{ item.waypoint.index }}</span>
                   <span
@@ -84,7 +87,7 @@
                 type="number"
                 id="mapsize"
                 list="sizes"
-                v-model="map.size"
+                v-model="editor.map.size"
               />
               <datalist id="sizes">
                 <option
@@ -99,10 +102,10 @@
             </span>
 
             <span class="flex text-center">
-              Waypoints: {{ map.waypoints.length }}
+              Waypoints: {{ editor.map.waypoints.length }}
             </span>
             <span class="flex text-center">
-              Paths: {{ map.paths.length }}
+              Paths: {{ editor.map.paths.length }}
             </span>
           </div>
         </Card>
@@ -111,9 +114,9 @@
     <Map
       @wpt-click="wptClick"
       class="flex flex-grow border border-gray-400 rounded shadow-md m-2 ml-0 p-2"
-      v-if="!mapLoading && map"
-      :map="map"
+      v-if="!mapLoading && editor"
       :mapImageURL="mapImageURL"
+      :editor="editor"
     />
   </div>
 </template>
@@ -144,37 +147,25 @@ export default {
     },
   }),
   computed: {
-    map() {
-      if (!this.editor) {
-        return null;
-      }
-      return this.editor.map;
-    },
-    selection() {
-      if (!this.editor) {
-        return null;
-      }
-      return this.editor.selection;
-    },
     fileTypeDesc() {
-      if (!this.map) {
+      if (!this.editor) {
         return;
       }
-      if (this.map.fileType === "config") {
+      if (this.editor.map.fileType === "config") {
         return "Savegame (config file)";
       }
-      if (this.map.fileType === "routeManagerExport") {
+      if (this.editor.map.fileType === "routeManagerExport") {
         return "Route Manager Exported Route";
       }
-      return this.map.fileType;
+      return this.editor.map.fileType;
     },
     factor() {
-      if (!this.map || !this.map.size) {
+      if (!this.editor || !this.editor.map.size) {
         return null;
       }
 
-      if (this.defaultMapSizes[this.map.size]) {
-        return this.defaultMapSizes[this.map.size];
+      if (this.defaultMapSizes[this.editor.map.size]) {
+        return this.defaultMapSizes[this.editor.map.size];
       }
 
       return "custom";

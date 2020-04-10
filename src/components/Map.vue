@@ -10,18 +10,18 @@
 
         <image
           v-if="mapImageURL"
-          :x="-map.size / 2"
-          :y="-map.size / 2"
-          :width="map.size"
-          :height="map.size"
+          :x="-editor.map.size / 2"
+          :y="-editor.map.size / 2"
+          :width="editor.map.size"
+          :height="editor.map.size"
           :href="mapImageURL"
         />
       </g>
 
       <g class="targets">
         <text
-          v-for="marker in map.markers"
-          :key="marker.wptIndex"
+          v-for="marker in editor.map.markers()"
+          :key="marker.index"
           class="marker-label"
           text-anchor="middle"
           :x="marker.wpt.x"
@@ -57,7 +57,7 @@
       </g>
 
       <g class="waypoints">
-        <g v-for="(waypoint, index) in map.waypoints" :key="index">
+        <g v-for="waypoint in editor.map.waypoints" :key="waypoint.index">
           <title v-if="debug || waypoint.marker">
             {{
               waypoint.marker
@@ -68,7 +68,7 @@
                   (debug ? " | " : "")
                 : ""
             }}
-            {{ debug ? "wpt # " + index : "" }}
+            {{ debug ? "wpt # " + waypoint.index : "" }}
           </title>
           <circle
             @click="$emit('wpt-click', { event: $event, waypoint })"
@@ -81,6 +81,17 @@
             :r="waypoint.marker ? 1.2 : waypoint.isNode() ? 0.5 : 0.3"
           />
         </g>
+      </g>
+
+      <g class="selection">
+        <circle
+          class="waypoint"
+          v-for="waypoint in selectedWpts"
+          :key="waypoint.index"
+          :cx="waypoint.x"
+          :cy="waypoint.z"
+          :r="waypoint.marker ? 1.4 : waypoint.isNode() ? 0.7 : 0.5"
+        ></circle>
       </g>
     </svg>
 
@@ -103,12 +114,17 @@ export default {
     debug: true,
   }),
   props: {
-    map: Object,
+    editor: Object,
     mapImageURL: String,
   },
   computed: {
+    selectedWpts() {
+      return this.editor.selection
+        .filter((item) => item && item.waypoint)
+        .map(({ waypoint }) => waypoint);
+    },
     drawnPaths() {
-      return this.map.paths.map((path) => {
+      return this.editor.map.paths.map((path) => {
         let reduced = this.reducePath(path.wpts);
 
         return {
@@ -135,10 +151,10 @@ export default {
     },
     mapBoundsPoints() {
       return [
-        [-this.map.size / 2, -this.map.size / 2].join(","),
-        [this.map.size / 2, -this.map.size / 2].join(","),
-        [this.map.size / 2, this.map.size / 2].join(","),
-        [-this.map.size / 2, this.map.size / 2].join(","),
+        [-this.editor.map.size / 2, -this.editor.map.size / 2].join(","),
+        [this.editor.map.size / 2, -this.editor.map.size / 2].join(","),
+        [this.editor.map.size / 2, this.editor.map.size / 2].join(","),
+        [-this.editor.map.size / 2, this.editor.map.size / 2].join(","),
       ].join(" ");
     },
   },
@@ -204,28 +220,28 @@ export default {
   stroke-width: 2;
 }
 
-.waypoint {
+.waypoints .waypoint {
   fill: transparent;
   stroke: rgb(78, 64, 63);
   stroke-width: 0.1;
 }
 
-.waypoint:hover {
+.waypoints .waypoint:hover {
   fill: rgb(78, 64, 63);
 }
 
-.node {
+.waypoints .node {
   fill: orange;
   stroke: rgb(255, 0, 0);
   stroke-width: 0.3;
 }
 
-.node:hover {
+.waypoints .node:hover {
   fill: rgb(78, 64, 63);
   stroke: rgb(78, 64, 63);
 }
 
-.marker {
+.waypoints .marker {
   fill: rgb(4, 0, 255);
   stroke: rgb(0, 225, 255);
   stroke-width: 0.4;
@@ -239,7 +255,7 @@ export default {
   stroke-width: 0.3;
 }
 
-.link {
+.links .link {
   fill: none;
   stroke-linecap: round;
   stroke: rgb(75, 255, 75);
@@ -247,22 +263,28 @@ export default {
   stroke-width: 1.5;
 }
 
-.link:hover {
+.links .link:hover {
   stroke-opacity: 1;
 }
 
-.link.bidirectional {
+.links .link.bidirectional {
   stroke: rgb(251, 47, 251);
 }
 
-.link.unidirectional {
+.links .link.unidirectional {
   marker-mid: url(#arrow);
   marker-start: url(#arrow);
 }
 
-.links marker path {
+.links .links marker path {
   stroke-width: 0.1;
   stroke: rgb(6, 77, 6);
   fill: transparent;
+}
+
+.selection .waypoint {
+  fill: none;
+  stroke-width: 0.3;
+  stroke: rgb(9, 0, 139);
 }
 </style>

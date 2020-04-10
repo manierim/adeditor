@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import routeParser from "../utils/routeparser";
+import {mapFromXMLFile} from "../utils/routeparser";
 
 export default {
   name: "LoadRoute",
@@ -46,7 +46,7 @@ export default {
         this.loadingStatus(false);
         this.$emit(
           "map-xml-loaded",
-          await new routeParser(e.target.result, selectedFile.name).parse()
+          await mapFromXMLFile(e.target.result, selectedFile.name)
         );
       };
       reader.readAsText(selectedFile);

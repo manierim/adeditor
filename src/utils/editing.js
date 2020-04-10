@@ -22,24 +22,15 @@ class actionExecutor {
     };
   }
 
-  selectionReplace(data, reverse) {
-    if (!reverse) {
-      let undo = {
-        action: "selectionReplace",
-        data: this.editor.selection.slice(),
-      };
-      this.editor.selection = data;
-      return undo;
-    }
-    let redo = {
+  selectionReplace(data) {
+    let remember = {
       action: "selectionReplace",
       data: this.editor.selection.slice(),
     };
     this.editor.selection = data;
-    return redo;
+    return remember;
   }
   selectionRemoveAtIndex(data, reverse) {
-    console.debug("selectionRemoveAtIndex", data, reverse);
     if (!reverse) {
       return {
         action: "selectionRemoveAtIndex",
@@ -53,6 +44,45 @@ class actionExecutor {
     return {
       action: "selectionRemoveAtIndex",
       data: data.index,
+    };
+  }
+
+  linkWayPointsToggle(data) {
+    let wptA = data[0];
+    let wptB = data[1];
+
+    if (
+      wptA.links[wptB.index] === undefined &&
+      wptB.links[wptA.index] === undefined
+    ) {
+      // add a -> b
+      wptA.links[wptB.index] = true;
+      wptB.links[wptA.index] = false;
+    } else if (
+      wptA.links[wptB.index] === true &&
+      wptB.links[wptA.index] === false
+    ) {
+      // remove a -> b
+      delete wptA.links[wptB.index];
+      delete wptB.links[wptA.index];
+    } else if (
+      wptA.links[wptB.index] === false &&
+      wptB.links[wptA.index] === true
+    ) {
+      // switch to bidirectional
+      wptA.links[wptB.index] = null;
+      wptB.links[wptA.index] = null;
+    } else {
+      // bidirectional to b -> a
+      wptA.links[wptB.index] = false;
+      wptB.links[wptA.index] = true;
+    }
+
+    this.editor.map.buildPaths();
+
+    return {
+      action: "linkWayPointsToggle",
+      data,
     };
   }
 }
@@ -81,9 +111,10 @@ export default class Editor {
 
     this.redoables.push({
       label: undo.label,
-      actions: undo.actions.map(({ action, data }) =>
-        this.executor[action](data, true)
-      ),
+      actions: undo.actions
+        .slice(0)
+        .reverse()
+        .map(({ action, data }) => this.executor[action](data, true)),
     });
   }
 
@@ -126,19 +157,24 @@ export default class Editor {
         (selection) => selection.waypoint === waypoint
       );
       if (selectionIndex !== -1) {
-        action = {
-          label: "Remove waypoint # " + waypoint.index + " from selection",
-          actions: [this.executor.selectionRemoveAtIndex(selectionIndex)],
-        };
+        if (this.selection.length === 1) {
+          action = {
+            label: "Empty selection",
+            actions: [this.executor.selectionReplace([])],
+          };
+        } else {
+          action = {
+            label: "Remove waypoint # " + waypoint.index + " from selection",
+            actions: [this.executor.selectionRemoveAtIndex(selectionIndex)],
+          };
+        }
       } else {
         action = {
           label: "Add waypoint # " + waypoint.index + " to selection",
           actions: [this.executor.selectionAdd(item)],
         };
       }
-    }
-
-    if (
+    } else if (
       (!this.selection.length || !event.ctrlKey) &&
       !event.shiftKey &&
       !event.altKey
@@ -146,6 +182,22 @@ export default class Editor {
       action = {
         label: "Set waypoint # " + waypoint.index + " as selection",
         actions: [this.executor.selectionReplace([item])],
+      };
+    } else if (
+      this.selection.length === 1 &&
+      this.selection.slice(0)[0].waypoint &&
+      this.selection.slice(0)[0].waypoint.index !== waypoint.index &&
+      !event.ctrlKey &&
+      event.shiftKey &&
+      !event.altKey
+    ) {
+      let origin = this.selection.slice(0)[0].waypoint;
+      action = {
+        label: "Toggle Link # " + origin.index + " -> # " + waypoint.index,
+        actions: [
+          this.executor.linkWayPointsToggle([origin, waypoint]),
+          // this.executor.selectionReplace([]),
+        ],
       };
     }
 

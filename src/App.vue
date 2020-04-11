@@ -172,6 +172,14 @@ export default {
     },
   },
 
+  mounted() {
+    window.addEventListener("keyup", (event) => {
+      if (this.editor && this.editor.keyUp(event)) {
+        event.preventDefault();
+      }
+    });
+  },
+
   methods: {
     mapLoaded(response) {
       this.error = response.error;

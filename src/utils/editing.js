@@ -7,6 +7,36 @@ class actionExecutor {
     this.editor = editor;
   }
 
+  removeWaypoint(data, reverse) {
+    if (!reverse) {
+      let removedlinks = Object.entries(data.links).map((kv) => {
+        let index = kv[0];
+        let linktype = kv[1];
+        delete this.editor.map.waypoints[index].links[data.index];
+        return { index, linktype };
+      });
+      delete this.editor.map.waypoints[data.index];
+
+      return {
+        action: "removeWaypoint",
+        data: {
+          wpt: data,
+          removedlinks,
+        },
+      };
+    }
+    console.debug(data);
+    this.editor.map.waypoints[data.wpt.index] = data.wpt;
+    data.removedlinks.forEach(({ index, linktype }) => {
+      this.editor.map.waypoints[index].links[data.wpt.index] = linktype;
+    });
+
+    return {
+      action: "removeWaypoint",
+      data: data.wpt,
+    };
+  }
+
   selectionAdd(data, reverse) {
     if (!reverse) {
       this.editor.selection.push(data);
@@ -30,6 +60,7 @@ class actionExecutor {
     this.editor.selection = data;
     return remember;
   }
+
   selectionRemoveAtIndex(data, reverse) {
     if (!reverse) {
       return {
@@ -78,8 +109,6 @@ class actionExecutor {
       wptB.links[wptA.index] = true;
     }
 
-    this.editor.map.buildPaths();
-
     return {
       action: "linkWayPointsToggle",
       data,
@@ -110,12 +139,17 @@ export default class Editor {
     let undo = this.actions.pop();
 
     this.redoables.push({
+      rebuildPaths: undo.rebuildPaths,
       label: undo.label,
       actions: undo.actions
         .slice(0)
         .reverse()
         .map(({ action, data }) => this.executor[action](data, true)),
     });
+
+    if (undo.rebuildPaths) {
+      this.map.buildPaths();
+    }
   }
 
   redo() {
@@ -125,19 +159,64 @@ export default class Editor {
     let redo = this.redoables.pop();
 
     this.actions.push({
+      rebuildPaths: redo.rebuildPaths,
       label: redo.label,
       actions: redo.actions.map(({ action, data }) =>
         this.executor[action](data, false)
       ),
     });
+
+    if (redo.rebuildPaths) {
+      this.map.buildPaths();
+    }
   }
 
   doneaction(action) {
+    if (action.rebuildPaths) {
+      this.map.buildPaths();
+    }
     this.redoables = [];
     this.actions.push(action);
     if (this.actions.length > maxUndos) {
       this.actions.splice(0, 1);
     }
+  }
+
+  keyUp(event) {
+    let action;
+
+    if (
+      event.code === "Delete" &&
+      !event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.repeat &&
+      this.selection.length
+    ) {
+      let toDelete = this.selection.slice(0);
+
+      let actions = [this.executor.selectionReplace([])];
+
+      toDelete.forEach((item) => {
+        if (item && item.waypoint) {
+          actions.push(this.executor.removeWaypoint(item.waypoint));
+        }
+      });
+
+      action = {
+        label: "Remove selected items",
+        actions,
+        rebuildPaths: true,
+      };
+    }
+
+    if (action) {
+      this.doneaction(action);
+      return true;
+    }
+    console.debug("keyUp", event);
+    return false;
   }
 
   wptClick({ event, waypoint }) {
@@ -194,10 +273,8 @@ export default class Editor {
       let origin = this.selection.slice(0)[0].waypoint;
       action = {
         label: "Toggle Link # " + origin.index + " -> # " + waypoint.index,
-        actions: [
-          this.executor.linkWayPointsToggle([origin, waypoint]),
-          // this.executor.selectionReplace([]),
-        ],
+        actions: [this.executor.linkWayPointsToggle([origin, waypoint])],
+        rebuildPaths: true,
       };
     }
 
@@ -205,6 +282,6 @@ export default class Editor {
       this.doneaction(action);
       return;
     }
-    console.debug(event, waypoint);
+    console.debug("wptClick", event, waypoint);
   }
 }

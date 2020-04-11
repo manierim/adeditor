@@ -50,11 +50,6 @@ export async function mapFromXMLFile(xmlString, fileName) {
     return response;
   }
 
-  if (!root.waypoints) {
-    response.error = "Cannot find waypoints";
-    return response;
-  }
-
   if (!root.waypoints || root.waypoints.length !== 1) {
     response.error = "Cannot find waypoints";
     return response;
@@ -124,7 +119,18 @@ export async function mapFromXMLFile(xmlString, fileName) {
     }
   }
 
-  response.map = new Map(fileName, xml, fileType, mapname, x, y, z, outs, ins, markers);
+  response.map = new Map(
+    fileName,
+    xml,
+    fileType,
+    mapname,
+    x,
+    y,
+    z,
+    outs,
+    ins,
+    markers
+  );
 
   return response;
 }

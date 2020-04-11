@@ -7,6 +7,64 @@ export default class parser {
     this.fileName = fileName;
   }
 
+  async write(wptsArray, markers) {
+    let wptsRoot = this.xml.routeExport.waypoints[0];
+
+    let indexMap = wptsArray.map(wpt => parseInt(wpt.index));
+
+    wptsRoot["$"].c = wptsArray.length;
+
+    wptsRoot["x"] = wptsArray.map(wpt => wpt.x).join(";");
+    wptsRoot["y"] = wptsArray.map(wpt => wpt.y).join(";");
+    wptsRoot["z"] = wptsArray.map(wpt => wpt.z).join(";");
+
+    function links(list) {
+      list = list.map(idx => indexMap.indexOf(idx) + 1);
+      if (!list.length) {
+        list.push(-1);
+      }
+      return list;
+    }
+
+    wptsRoot["out"] = wptsArray.map(wpt => links(wpt.outs).join(",")).join(";");
+    wptsRoot["in"] = wptsArray.map(wpt => links(wpt.ins).join(",")).join(";");
+
+    let defaultFolder = "All";
+
+    let folders = [defaultFolder];
+
+    this.xml.routeExport.markers[0]["m"] = markers.map(marker => {
+      let folder = marker.folder ? marker.folder : defaultFolder;
+      if (folders.indexOf(folder) === -1) {
+        folders.push(folder);
+      }
+      return {
+        $: {
+          i: indexMap.indexOf(parseInt(marker.wpt.index)) + 1,
+          n: marker.name,
+          g: folder
+        }
+      };
+    });
+
+    this.xml.routeExport.groups[0]["g"] = folders.map(folder => {
+      return {
+        $: {
+          n: folder
+        }
+      };
+    });
+
+    let xml2js = require("xml2js");
+
+    let builder = new xml2js.Builder({
+      headless: true
+    });
+    let content = builder.buildObject(this.xml);
+
+    console.debug(content);
+  }
+
   parse() {
     let response = {
       error: null,

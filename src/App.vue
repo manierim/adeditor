@@ -13,6 +13,8 @@
           @loading-status="mapLoading = $event"
           @map-image-change="mapImageURL = $event"
           @map-xml-loaded="mapLoaded"
+          :cansave="!mapLoading && !!editor"
+          @save-map="saveMap"
         />
 
         <div class="flex" v-if="error">
@@ -169,6 +171,12 @@ export default {
   },
 
   methods: {
+    async saveMap() {
+      if (!this.editor || !this.editor.map) {
+        return;
+      }
+      await this.editor.map.save();
+    },
     mapLoaded(response) {
       this.error = response.error;
       if (response.map) {

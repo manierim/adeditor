@@ -95,4 +95,56 @@ export default class parser {
     }
     return response;
   }
+
+  async write(wptsArray, markers) {
+    let wptsRoot = this.xml.AutoDrive[this.mapname][0].waypoints[0];
+
+    let indexMap = wptsArray.map(wpt => parseInt(wpt.index));
+
+    wptsRoot["id"] = wptsArray
+      .map(wpt => indexMap.indexOf(wpt.index) + 1)
+      .join(",");
+    wptsRoot["x"] = wptsArray.map(wpt => wpt.x).join(",");
+    wptsRoot["y"] = wptsArray.map(wpt => wpt.y).join(",");
+    wptsRoot["z"] = wptsArray.map(wpt => wpt.z).join(",");
+
+    function links(list) {
+      list = list.map(idx => indexMap.indexOf(idx) + 1);
+      if (!list.length) {
+        list.push(-1);
+      }
+      return list;
+    }
+
+    wptsRoot["out"] = wptsArray.map(wpt => links(wpt.outs).join(",")).join(";");
+    wptsRoot["incoming"] = wptsArray
+      .map(wpt => links(wpt.ins).join(","))
+      .join(";");
+
+    let defaultFolder = "All";
+
+    this.xml.AutoDrive[this.mapname][0].mapmarker = {};
+
+    markers.forEach((marker, idx) => {
+      this.xml.AutoDrive[this.mapname][0].mapmarker["mm" + (idx + 1)] = {
+        id: indexMap.indexOf(parseInt(marker.wpt.index)) + 1,
+        name: marker.name,
+        group: marker.folder ? marker.folder : defaultFolder
+      };
+    });
+
+    let xml2js = require("xml2js");
+
+    let builder = new xml2js.Builder({
+      headless: false,
+      xmldec: {
+        version: "1.0",
+        encoding: "UTF-8",
+        standalone: false
+      }
+    });
+    let content = builder.buildObject(this.xml);
+
+    console.debug(content);
+  }
 }

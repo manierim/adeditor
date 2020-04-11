@@ -75,6 +75,10 @@ export default class Map {
       });
   }
 
+  async save() {
+    return await this.parser.write(this.waypointsArray(), this.markers());
+  }
+
   buildPaths() {
     let paths = [];
 

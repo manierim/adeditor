@@ -1,13 +1,20 @@
 <template>
   <div class="form flex flex-col text-sm">
     <div class="flex flex-col mb-2">
-      <span class="flex text-xs">XML</span>
-      <input
-        :disabled="loading"
-        class="flex text-xs"
-        @change="getFile"
-        type="file"
-      />
+      <template v-if="!loading && cansave">
+        <button class="w-full border shadow" @click="$emit('save-map')">
+          Save
+        </button>
+      </template>
+      <template v-else>
+        <span class="flex text-xs">XML</span>
+        <input
+          :disabled="loading"
+          class="flex text-xs"
+          @change="getFile"
+          type="file"
+        />
+      </template>
     </div>
     <div class="flex flex-col">
       <span class="flex text-xs">Image</span>
@@ -24,6 +31,9 @@ export default {
   data: () => ({
     loading: false
   }),
+  props: {
+    cansave: Boolean
+  },
   methods: {
     loadingStatus(loading) {
       if (loading === this.loading) {

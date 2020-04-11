@@ -1,36 +1,39 @@
 import Waypoint from "./waypoint";
 
 export default class Map {
-  fileName;
-  xml;
-  fileType;
-  mapname;
+  parser;
   cache;
   waypoints;
   size;
   paths;
 
-  constructor(fileName, xml, fileType, mapname, x, y, z, outs, ins, markers) {
-    this.fileName = fileName;
-    this.xml = xml;
-    this.fileType = fileType;
-    this.mapname = mapname;
+  constructor(parser) {
+    this.parser = parser;
+
     this.cache = {};
     this.waypoints = {};
 
+    let parsed = this.parser.parse();
+
     let max = 0;
 
-    for (let index = 0; index < x.length; index++) {
-      if (Math.abs(x[index]) > max) {
-        max = Math.abs(x[index]);
+    for (let index = 0; index < parsed.x.length; index++) {
+      if (Math.abs(parsed.x[index]) > max) {
+        max = Math.abs(parsed.x[index]);
       }
-      if (Math.abs(z[index]) > max) {
-        max = Math.abs(z[index]);
+      if (Math.abs(parsed.z[index]) > max) {
+        max = Math.abs(parsed.z[index]);
       }
-      let wpt = new Waypoint(this, index, x[index], y[index], z[index]);
+      let wpt = new Waypoint(
+        this,
+        index,
+        parsed.x[index],
+        parsed.y[index],
+        parsed.z[index]
+      );
 
-      [ins, outs].forEach((list, listIndex) => {
-        list[index].split(",").forEach((nodeIdStr) => {
+      [parsed.ins, parsed.outs].forEach((list, listIndex) => {
+        list[index].split(",").forEach(nodeIdStr => {
           let nodeIndex = parseInt(nodeIdStr) - 1;
           if (nodeIndex >= 0) {
             wpt.addLinkToWpt(nodeIndex, listIndex === 1);
@@ -47,7 +50,7 @@ export default class Map {
 
     this.size = size;
 
-    markers.forEach((marker) => {
+    parsed.markers.forEach(marker => {
       this.waypoints[marker.index - 1].marker = marker;
     });
 
@@ -55,13 +58,13 @@ export default class Map {
   }
 
   waypointsArray() {
-    return Object.entries(this.waypoints).map((kv) => kv[1]);
+    return Object.entries(this.waypoints).map(kv => kv[1]);
   }
 
   markers() {
     return this.waypointsArray()
-      .filter((wpt) => wpt.marker)
-      .map((wpt) => {
+      .filter(wpt => wpt.marker)
+      .map(wpt => {
         wpt.marker.wpt = wpt;
         return wpt.marker;
       });
@@ -79,15 +82,15 @@ export default class Map {
     let BidirectionalInitialWaypointsDone = [];
     let doneNodes = [];
 
-    let buildPathsForNode = (node) => {
+    let buildPathsForNode = node => {
       if (doneNodes.indexOf(node.index) !== -1) {
         return;
       }
       doneNodes.push(node.index);
 
-      [null, true].forEach((linkType) => {
+      [null, true].forEach(linkType => {
         // build paths from this node
-        node.linksofType(linkType).forEach((linkedNodeIndex) => {
+        node.linksofType(linkType).forEach(linkedNodeIndex => {
           if (
             linkType === null &&
             BidirectionalInitialWaypointsDone.indexOf(linkedNodeIndex) !== -1
@@ -107,7 +110,7 @@ export default class Map {
             linkedNode = this.waypoints[
               linkedNode
                 .linkedWpts()
-                .filter((id) => id !== wpts.slice(-2, -1)[0].index)[0]
+                .filter(id => id !== wpts.slice(-2, -1)[0].index)[0]
             ];
             wpts.push(linkedNode);
           }
@@ -116,14 +119,14 @@ export default class Map {
             BidirectionalInitialWaypointsDone.push(prevwpt.index);
           }
 
-          wpts.forEach((wptInPath) => {
+          wpts.forEach(wptInPath => {
             wptInPath.addPath(paths.length);
           });
 
           paths.push({
             index: paths.length,
             bidirectional: linkType === null,
-            wpts: wpts,
+            wpts: wpts
           });
         });
       });
@@ -131,7 +134,7 @@ export default class Map {
 
     let donePathWaypoints = [];
 
-    this.waypointsArray().forEach((wpt) => {
+    this.waypointsArray().forEach(wpt => {
       if (
         !wpt.linkedWpts().length ||
         donePathWaypoints.indexOf(wpt.index) !== -1

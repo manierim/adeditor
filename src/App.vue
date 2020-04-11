@@ -29,7 +29,7 @@
             <h3>Selected items</h3>
             <ul>
               <li
-                v-for="(item, index) in editor.selection.filter((item) => item)"
+                v-for="(item, index) in editor.selection.filter(item => item)"
                 :key="index"
               >
                 <template v-if="item.waypoint">
@@ -133,7 +133,7 @@ export default {
   components: {
     Card,
     LoadRoute,
-    Map,
+    Map
   },
   data: () => ({
     editor: null,
@@ -143,22 +143,10 @@ export default {
     defaultMapSizes: {
       2048: "default",
       4096: "4x",
-      8192: "8x",
-    },
+      8192: "8x"
+    }
   }),
   computed: {
-    fileTypeDesc() {
-      if (!this.editor) {
-        return;
-      }
-      if (this.editor.map.fileType === "config") {
-        return "Savegame (config file)";
-      }
-      if (this.editor.map.fileType === "routeManagerExport") {
-        return "Route Manager Exported Route";
-      }
-      return this.editor.map.fileType;
-    },
     factor() {
       if (!this.editor || !this.editor.map.size) {
         return null;
@@ -169,11 +157,11 @@ export default {
       }
 
       return "custom";
-    },
+    }
   },
 
   mounted() {
-    window.addEventListener("keyup", (event) => {
+    window.addEventListener("keyup", event => {
       if (this.editor && this.editor.keyUp(event)) {
         event.preventDefault();
       }
@@ -195,8 +183,8 @@ export default {
     },
     wptClick(event) {
       this.editor.wptClick(event);
-    },
-  },
+    }
+  }
 };
 </script>
 

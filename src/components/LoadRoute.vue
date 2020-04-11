@@ -2,7 +2,12 @@
   <div class="form flex flex-col text-sm">
     <div class="flex flex-col mb-2">
       <span class="flex text-xs">XML</span>
-      <input :disabled="loading" class="flex text-xs" @change="getFile" type="file" />
+      <input
+        :disabled="loading"
+        class="flex text-xs"
+        @change="getFile"
+        type="file"
+      />
     </div>
     <div class="flex flex-col">
       <span class="flex text-xs">Image</span>
@@ -12,13 +17,12 @@
 </template>
 
 <script>
-import {mapFromXMLFile} from "../utils/routeparser";
+import { mapFromXMLFile } from "../utils/routeparser";
 
 export default {
   name: "LoadRoute",
   data: () => ({
-    fileType: null,
-    loading: false,
+    loading: false
   }),
   methods: {
     loadingStatus(loading) {
@@ -42,7 +46,7 @@ export default {
       let selectedFile = event.target.files[0];
       let reader = new FileReader();
 
-      reader.onload = async (e) => {
+      reader.onload = async e => {
         this.loadingStatus(false);
         this.$emit(
           "map-xml-loaded",
@@ -50,8 +54,8 @@ export default {
         );
       };
       reader.readAsText(selectedFile);
-    },
-  },
+    }
+  }
 };
 </script>
 

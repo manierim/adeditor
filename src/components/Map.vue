@@ -57,7 +57,7 @@
       </g>
 
       <g class="waypoints">
-        <g v-for="waypoint in editor.map.waypoints" :key="waypoint.index">
+        <g v-for="waypoint in editor.map.waypointsArray()" :key="waypoint.index">
           <title v-if="debug || waypoint.marker">
             {{
               waypoint.marker

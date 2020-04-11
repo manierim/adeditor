@@ -16,7 +16,7 @@ export default class Map {
     this.fileType = fileType;
     this.mapname = mapname;
     this.cache = {};
-    this.waypoints = [];
+    this.waypoints = {};
 
     let max = 0;
 
@@ -27,13 +27,7 @@ export default class Map {
       if (Math.abs(z[index]) > max) {
         max = Math.abs(z[index]);
       }
-      let wpt = new Waypoint(
-        this,
-        this.waypoints.length,
-        x[index],
-        y[index],
-        z[index]
-      );
+      let wpt = new Waypoint(this, index, x[index], y[index], z[index]);
 
       [ins, outs].forEach((list, listIndex) => {
         list[index].split(",").forEach((nodeIdStr) => {
@@ -43,7 +37,7 @@ export default class Map {
           }
         });
       });
-      this.waypoints.push(wpt);
+      this.waypoints[index] = wpt;
     }
 
     let size = 2048;
@@ -60,8 +54,12 @@ export default class Map {
     this.buildPaths();
   }
 
+  waypointsArray() {
+    return Object.entries(this.waypoints).map((kv) => kv[1]);
+  }
+
   markers() {
-    return this.waypoints
+    return this.waypointsArray()
       .filter((wpt) => wpt.marker)
       .map((wpt) => {
         wpt.marker.wpt = wpt;
@@ -72,7 +70,7 @@ export default class Map {
   buildPaths() {
     let paths = [];
 
-    if (!this.waypoints.length) {
+    if (!this.waypointsArray().length) {
       return;
     }
 
@@ -91,8 +89,8 @@ export default class Map {
         // build paths from this node
         node.linksofType(linkType).forEach((linkedNodeIndex) => {
           if (
-            linkType === null
-            && BidirectionalInitialWaypointsDone.indexOf(linkedNodeIndex) !== -1
+            linkType === null &&
+            BidirectionalInitialWaypointsDone.indexOf(linkedNodeIndex) !== -1
           ) {
             return;
           }
@@ -133,7 +131,7 @@ export default class Map {
 
     let donePathWaypoints = [];
 
-    this.waypoints.forEach((wpt) => {
+    this.waypointsArray().forEach((wpt) => {
       if (
         !wpt.linkedWpts().length ||
         donePathWaypoints.indexOf(wpt.index) !== -1

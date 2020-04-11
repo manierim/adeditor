@@ -102,7 +102,7 @@
             </span>
 
             <span class="flex text-center">
-              Waypoints: {{ editor.map.waypoints.length }}
+              Waypoints: {{ editor.map.waypointsArray().length }}
             </span>
             <span class="flex text-center">
               Paths: {{ editor.map.paths.length }}

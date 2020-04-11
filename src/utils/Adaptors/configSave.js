@@ -5,19 +5,18 @@ export default class parser {
   constructor(xml, fileName) {
     this.xml = xml;
     this.fileName = fileName;
-    this.fileType = "config";
   }
 
   parse() {
     let response = {
       error: null,
-      map: null,
+      id: null,
       x: null,
       y: null,
       z: null,
       outs: null,
       ins: null,
-      markers: null,
+      markers: null
     };
 
     let root;
@@ -44,6 +43,7 @@ export default class parser {
       return response;
     }
 
+    response.id = root.waypoints[0].id[0].split(",");
     response.x = root.waypoints[0].x[0].split(",");
     response.y = root.waypoints[0].y[0].split(",");
     response.z = root.waypoints[0].z[0].split(",");
@@ -52,12 +52,16 @@ export default class parser {
     response.ins = root.waypoints[0]["incoming"][0].split(";");
 
     if (
+      response.id.length !== response.x.length ||
       response.x.length !== response.y.length ||
       response.y.length !== response.z.length ||
       response.z.length !== response.outs.length ||
       response.outs.length !== response.ins.length
     ) {
       response.error =
+        "id (" +
+        response.id.length +
+        "), " +
         "x (" +
         response.x.length +
         "), " +
@@ -85,7 +89,7 @@ export default class parser {
         response.markers.push({
           index: parseInt(marker.id[0]),
           name: marker.name[0],
-          folder: marker.group[0],
+          folder: marker.group[0]
         });
       }
     }

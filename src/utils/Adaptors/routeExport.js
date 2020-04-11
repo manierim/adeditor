@@ -5,7 +5,6 @@ export default class parser {
   constructor(xml, fileName) {
     this.xml = xml;
     this.fileName = fileName;
-    this.fileType = "routeManagerExport";
   }
 
   parse() {

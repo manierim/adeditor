@@ -24,23 +24,28 @@ export default class Map {
       if (Math.abs(parsed.z[index]) > max) {
         max = Math.abs(parsed.z[index]);
       }
+      let id = index + 1;
+      if (parsed.id) {
+        id = parsed.id[index];
+      }
+
+      let linkedArray = list =>
+        list
+          .split(",")
+          .map(linkedStr => parseInt(linkedStr))
+          .filter(linkedId => linkedId > 0);
+
       let wpt = new Waypoint(
         this,
-        index,
+        id,
         parsed.x[index],
         parsed.y[index],
-        parsed.z[index]
+        parsed.z[index],
+        linkedArray(parsed.ins[index]),
+        linkedArray(parsed.outs[index])
       );
 
-      [parsed.ins, parsed.outs].forEach((list, listIndex) => {
-        list[index].split(",").forEach(nodeIdStr => {
-          let nodeIndex = parseInt(nodeIdStr) - 1;
-          if (nodeIndex >= 0) {
-            wpt.addLinkToWpt(nodeIndex, listIndex === 1);
-          }
-        });
-      });
-      this.waypoints[index] = wpt;
+      this.waypoints[id] = wpt;
     }
 
     let size = 2048;
@@ -51,7 +56,7 @@ export default class Map {
     this.size = size;
 
     parsed.markers.forEach(marker => {
-      this.waypoints[marker.index - 1].marker = marker;
+      this.waypoints[marker.index].marker = marker;
     });
 
     this.buildPaths();
@@ -88,11 +93,11 @@ export default class Map {
       }
       doneNodes.push(node.index);
 
-      [null, true].forEach(linkType => {
+      ["bidirectional", "out", "reverse-out"].forEach(linkType => {
         // build paths from this node
         node.linksofType(linkType).forEach(linkedNodeIndex => {
           if (
-            linkType === null &&
+            linkType === "bidirectional" &&
             BidirectionalInitialWaypointsDone.indexOf(linkedNodeIndex) !== -1
           ) {
             return;
@@ -100,22 +105,37 @@ export default class Map {
           let wpts = [node];
 
           let linkedNode = this.waypoints[linkedNodeIndex];
+          if (!linkedNode) {
+            console.warn("cannot find waypoint #", linkedNodeIndex);
+            return;
+          }
 
           wpts.push(linkedNode);
 
           let prevwpt = node;
 
-          while (!linkedNode.isNode() && linkedNode.index !== node.index) {
+          while (
+            linkedNode &&
+            !linkedNode.isNode() &&
+            linkedNode.index !== node.index
+          ) {
             prevwpt = linkedNode;
-            linkedNode = this.waypoints[
-              linkedNode
-                .linkedWpts()
-                .filter(id => id !== wpts.slice(-2, -1)[0].index)[0]
-            ];
+
+            let nextWptIndex = linkedNode
+              .linkedWpts()
+              .filter(id => id !== wpts.slice(-2, -1)[0].index)[0];
+
+            linkedNode = this.waypoints[nextWptIndex];
+
+            if (!linkedNode) {
+              console.warn("cannot find waypoint #", nextWptIndex);
+              continue;
+            }
+
             wpts.push(linkedNode);
           }
 
-          if (linkType === null) {
+          if (linkType === "bidirectional") {
             BidirectionalInitialWaypointsDone.push(prevwpt.index);
           }
 
@@ -125,7 +145,8 @@ export default class Map {
 
           paths.push({
             index: paths.length,
-            bidirectional: linkType === null,
+            bidirectional: linkType === "bidirectional",
+            reverse: linkType === "reverse-out",
             wpts: wpts
           });
         });
@@ -142,14 +163,13 @@ export default class Map {
         return;
       }
 
-      let start = null;
+      let pathNodes = [];
       let prev = null;
 
-      while (!wpt.isNode() && wpt.index !== start) {
+      while (!wpt.isNode() && pathNodes.indexOf(wpt.index) === -1) {
         donePathWaypoints.push(wpt.index);
-        if (start === null) {
-          start = wpt.index;
-        }
+
+        pathNodes.push(wpt.index);
 
         let next = wpt.linkedWpts()[0];
 

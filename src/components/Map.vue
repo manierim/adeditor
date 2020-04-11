@@ -50,14 +50,23 @@
           <title v-if="debug">path # {{ index }}</title>
           <path
             class="link"
-            :class="path.bidirectional ? 'bidirectional' : 'unidirectional'"
+            :class="
+              path.bidirectional
+                ? 'bidirectional'
+                : path.reverse
+                ? 'reverse'
+                : 'unidirectional'
+            "
             :d="path.d"
           />
         </g>
       </g>
 
       <g class="waypoints">
-        <g v-for="waypoint in editor.map.waypointsArray()" :key="waypoint.index">
+        <g
+          v-for="waypoint in editor.map.waypointsArray()"
+          :key="waypoint.index"
+        >
           <title v-if="debug || waypoint.marker">
             {{
               waypoint.marker
@@ -74,7 +83,7 @@
             @click="$emit('wpt-click', { event: $event, waypoint })"
             :class="[
               waypoint.isNode() ? 'node' : 'waypoint',
-              { marker: waypoint.marker ? true : false },
+              { marker: waypoint.marker ? true : false }
             ]"
             :cx="waypoint.x"
             :cy="waypoint.z"
@@ -111,28 +120,32 @@ import svghandling from "../utils/svghandling";
 export default {
   name: "Map",
   data: () => ({
-    debug: true,
+    debug: true
   }),
   props: {
     editor: Object,
-    mapImageURL: String,
+    mapImageURL: String
   },
   computed: {
     selectedWpts() {
       return this.editor.selection
-        .filter((item) => item && item.waypoint)
+        .filter(item => item && item.waypoint)
         .map(({ waypoint }) => waypoint);
     },
     drawnPaths() {
-      return this.editor.map.paths.map((path) => {
+      return this.editor.map.paths.map(path => {
         let reduced = this.reducePath(path.wpts);
 
-        return {
-          bidirectional: path.bidirectional,
-          segments: path.wpts.length - 1,
-          reducedsegments: reduced.length - 1,
-          d: "M" + reduced.map((node) => [node.x, node.z].join(",")).join(" L"),
-        };
+        let dpath = Object.fromEntries(Object.entries(path));
+
+        delete dpath.wpts;
+
+        dpath.segments = path.wpts.length - 1;
+        dpath.reducedsegments = reduced.length - 1;
+        dpath.d =
+          "M" + reduced.map(node => [node.x, node.z].join(",")).join(" L");
+
+        return dpath;
       });
     },
     segments() {
@@ -140,12 +153,12 @@ export default {
         (segments, path) => {
           return {
             total: segments.total + path.segments,
-            reduced: segments.reduced + path.reducedsegments,
+            reduced: segments.reduced + path.reducedsegments
           };
         },
         {
           total: 0,
-          reduced: 0,
+          reduced: 0
         }
       );
     },
@@ -154,9 +167,9 @@ export default {
         [-this.editor.map.size / 2, -this.editor.map.size / 2].join(","),
         [this.editor.map.size / 2, -this.editor.map.size / 2].join(","),
         [this.editor.map.size / 2, this.editor.map.size / 2].join(","),
-        [-this.editor.map.size / 2, this.editor.map.size / 2].join(","),
+        [-this.editor.map.size / 2, this.editor.map.size / 2].join(",")
       ].join(" ");
-    },
+    }
   },
   methods: {
     windowResize() {
@@ -199,7 +212,7 @@ export default {
 
         return reduced;
       }, []);
-    },
+    }
   },
   beforeDestroy: function() {
     window.removeEventListener("resize", this.windowResize);
@@ -208,7 +221,7 @@ export default {
   mounted() {
     this.handler = new svghandling(this.$refs.svgMap);
     window.addEventListener("resize", this.windowResize);
-  },
+  }
 };
 </script>
 
@@ -259,7 +272,7 @@ export default {
   fill: none;
   stroke-linecap: round;
   stroke: rgb(75, 255, 75);
-  stroke-opacity: 0.7;
+  stroke-opacity: 0.6;
   stroke-width: 1.5;
 }
 
@@ -271,7 +284,12 @@ export default {
   stroke: rgb(251, 47, 251);
 }
 
-.links .link.unidirectional {
+.links .link.reverse {
+  stroke: rgb(47, 251, 251);
+}
+
+.links .link.unidirectional,
+.links .link.reverse {
   marker-mid: url(#arrow);
   marker-start: url(#arrow);
 }

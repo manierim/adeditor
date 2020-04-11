@@ -1,13 +1,43 @@
 export default class Waypoint {
-  constructor(map, index, x, y, z) {
+  map;
+  index;
+  x;
+  y;
+  z;
+  marker;
+  ins;
+  outs;
+
+  constructor(map, index, x, y, z, ins, outs) {
     this.map = map;
-    this.index = index;
+    this.index = parseInt(index);
     this.x = parseFloat(x);
     this.y = parseFloat(y);
     this.z = parseFloat(z);
     this.marker = null;
-    this.links = {};
+
+    this.ins = ins;
+    this.outs = outs;
+
     this.paths = [];
+  }
+
+  inFromOuts() {
+    if (this.map.cache["inFromOuts"] === undefined) {
+      this.map.cache["inFromOuts"] = {};
+      this.map.waypointsArray().forEach(wpt => {
+        if (!this.map.cache["inFromOuts"][wpt.index]) {
+          this.map.cache["inFromOuts"][wpt.index] = [];
+        }
+        wpt.outs.forEach(targetIndex => {
+          if (!this.map.cache["inFromOuts"][targetIndex]) {
+            this.map.cache["inFromOuts"][targetIndex] = [];
+          }
+          this.map.cache["inFromOuts"][targetIndex].push(wpt.index);
+        });
+      });
+    }
+    return this.map.cache["inFromOuts"];
   }
 
   _cache_check() {
@@ -32,29 +62,17 @@ export default class Waypoint {
     return def;
   }
 
-  addLinkToWpt(toNodeIndex, isOut) {
-    this.set("linksofType", null);
-    if (this.links[toNodeIndex] === undefined) {
-      this.links[toNodeIndex] = isOut;
-      return;
-    }
-
-    if (this.links[toNodeIndex] === null || this.links[toNodeIndex] === isOut) {
-      return;
-    }
-
-    this.links[toNodeIndex] = null;
-  }
-
   linksofType(linkType) {
     let linksofType = this.get("linksofType");
-    if (!linksofType) {
+    if (linksofType === undefined) {
       linksofType = {};
-      [false, true, null].forEach((linkType) => {
-        linksofType[linkType] = this.linkedWpts().filter(
-          (linkedNodeIndex) => this.linktoWptIsOut(linkedNodeIndex) === linkType
-        );
-      });
+      ["in", "out", "bidirectional", "reverse-in", "reverse-out"].forEach(
+        linkType => {
+          linksofType[linkType] = this.linkedWpts().filter(
+            linkedNodeIndex => this.linkType(linkedNodeIndex) === linkType
+          );
+        }
+      );
       this.set("linksofType", linksofType);
     }
 
@@ -64,24 +82,82 @@ export default class Waypoint {
     return linksofType;
   }
 
-  isNode() {
-    if (!this.linkedWpts().length) {
-      return false;
+  linkType(targetIndex) {
+    let cacheKey = "linkType-" + targetIndex;
+    let linkType = this.get(cacheKey);
+    if (linkType === undefined) {
+      linkType = "in";
+
+      if (
+        this.outs.indexOf(targetIndex) !== -1 &&
+        this.ins.indexOf(targetIndex) !== -1
+      ) {
+        linkType = "bidirectional";
+      } else if (
+        this.ins.indexOf(targetIndex) !== -1 &&
+        this.map.waypoints[targetIndex].outs.indexOf(this.index) !== -1
+      ) {
+        linkType = "in";
+      } else if (
+        this.outs.indexOf(targetIndex) !== -1 &&
+        this.map.waypoints[targetIndex].ins.indexOf(this.index) !== -1
+      ) {
+        linkType = "out";
+      } else if (this.outs.indexOf(targetIndex) !== -1) {
+        linkType = "reverse-out";
+      } else {
+        linkType = "reverse-in";
+      }
+      this.set(cacheKey, linkType);
     }
-    let linksofType = this.linksofType();
-    return !(
-      this.linkedWpts().length === 2 &&
-      (linksofType[null].length === 2 ||
-        (linksofType[false].length === 1 && linksofType[true].length === 1))
-    );
+    return linkType;
+  }
+
+  isNode() {
+    let isNode = this.get("isNode");
+    if (isNode === undefined) {
+      isNode = true;
+      let linkedWpts = this.linkedWpts();
+      if (linkedWpts.length === 2) {
+        isNode = !(
+          // standard in -> out
+          (
+            (this.linkType(linkedWpts[0]) === "in" &&
+              this.linkType(linkedWpts[1]) === "out") ||
+            // standard out -> in
+            (this.linkType(linkedWpts[0]) === "out" &&
+              this.linkType(linkedWpts[1]) === "in") ||
+            // reverse out -> in
+            (this.linkType(linkedWpts[0]) === "reverse-out" &&
+              this.linkType(linkedWpts[1]) === "reverse-in") ||
+            // reverse in -> out
+            (this.linkType(linkedWpts[0]) === "reverse-in" &&
+              this.linkType(linkedWpts[1]) === "reverse-out") ||
+            // bidirectional
+            (this.linkType(linkedWpts[0]) === "bidirectional" &&
+              this.linkType(linkedWpts[1]) === "bidirectional")
+          )
+        );
+      }
+      this.set("isNode", isNode);
+    }
+    return isNode;
   }
 
   linkedWpts() {
-    return Object.keys(this.links).map((index) => parseInt(index));
-  }
+    let linkedWpts = this.get("linkedWpts");
 
-  linktoWptIsOut(index) {
-    return this.links[index];
+    if (!linkedWpts) {
+      linkedWpts = [
+        ...new Set([
+          ...this.ins,
+          ...this.outs,
+          ...this.inFromOuts()[this.index]
+        ])
+      ];
+      this.set("linkedWpts", linkedWpts);
+    }
+    return linkedWpts;
   }
 
   addPath(pathIndex) {

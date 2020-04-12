@@ -80,12 +80,12 @@ export default class Map {
   }
 
   buildPaths() {
-    let paths = [];
-
     if (!this.waypointsArray().length) {
+      this.paths = [];
       return;
     }
 
+    let paths = [];
     this.cache = {};
 
     let BidirectionalInitialWaypointsDone = [];

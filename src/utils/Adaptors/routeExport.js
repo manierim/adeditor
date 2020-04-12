@@ -26,8 +26,12 @@ export default class parser {
       return list;
     }
 
-    wptsRoot["out"] = wptsArray.map(wpt => links(wpt.outs).join(",")).join(";");
-    wptsRoot["in"] = wptsArray.map(wpt => links(wpt.ins).join(",")).join(";");
+    wptsRoot["out"] = wptsArray
+      .map(wpt => links(wpt.existingOuts()).join(","))
+      .join(";");
+    wptsRoot["in"] = wptsArray
+      .map(wpt => links(wpt.existingIns()).join(","))
+      .join(";");
 
     let defaultFolder = "All";
 

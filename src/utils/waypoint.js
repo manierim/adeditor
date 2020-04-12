@@ -29,7 +29,7 @@ export default class Waypoint {
         if (!this.map.cache["inFromOuts"][wpt.index]) {
           this.map.cache["inFromOuts"][wpt.index] = [];
         }
-        wpt.outs.forEach(targetIndex => {
+        wpt.existingOuts().forEach(targetIndex => {
           if (!this.map.cache["inFromOuts"][targetIndex]) {
             this.map.cache["inFromOuts"][targetIndex] = [];
           }
@@ -82,6 +82,24 @@ export default class Waypoint {
     return linksofType;
   }
 
+  existingIns() {
+    let existingIns = this.get("existingIns");
+    if (existingIns === undefined) {
+      existingIns = this.ins.filter(idx => this.map.waypoints[idx]);
+      this.set("existingIns", existingIns);
+    }
+    return existingIns;
+  }
+
+  existingOuts() {
+    let existingOuts = this.get("existingOuts");
+    if (existingOuts === undefined) {
+      existingOuts = this.outs.filter(idx => this.map.waypoints[idx]);
+      this.set("existingOuts", existingOuts);
+    }
+    return existingOuts;
+  }
+
   linkType(targetIndex) {
     let cacheKey = "linkType-" + targetIndex;
     let linkType = this.get(cacheKey);
@@ -89,21 +107,22 @@ export default class Waypoint {
       linkType = "in";
 
       if (
-        this.outs.indexOf(targetIndex) !== -1 &&
-        this.ins.indexOf(targetIndex) !== -1
+        this.existingOuts().indexOf(targetIndex) !== -1 &&
+        this.existingIns().indexOf(targetIndex) !== -1
       ) {
         linkType = "bidirectional";
       } else if (
-        this.ins.indexOf(targetIndex) !== -1 &&
-        this.map.waypoints[targetIndex].outs.indexOf(this.index) !== -1
+        this.existingIns().indexOf(targetIndex) !== -1 &&
+        this.map.waypoints[targetIndex].existingOuts().indexOf(this.index) !==
+          -1
       ) {
         linkType = "in";
       } else if (
-        this.outs.indexOf(targetIndex) !== -1 &&
-        this.map.waypoints[targetIndex].ins.indexOf(this.index) !== -1
+        this.existingOuts().indexOf(targetIndex) !== -1 &&
+        this.map.waypoints[targetIndex].existingIns().indexOf(this.index) !== -1
       ) {
         linkType = "out";
-      } else if (this.outs.indexOf(targetIndex) !== -1) {
+      } else if (this.existingOuts().indexOf(targetIndex) !== -1) {
         linkType = "reverse-out";
       } else {
         linkType = "reverse-in";
@@ -150,8 +169,8 @@ export default class Waypoint {
     if (!linkedWpts) {
       linkedWpts = [
         ...new Set([
-          ...this.ins,
-          ...this.outs,
+          ...this.existingIns(),
+          ...this.existingOuts(),
           ...this.inFromOuts()[this.index]
         ])
       ];

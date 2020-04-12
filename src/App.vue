@@ -128,7 +128,7 @@ import LoadRoute from "./components/LoadRoute";
 import Map from "./components/Map";
 
 import Card from "./components/partials/Card";
-import Editor from "./utils/editing";
+import Editor from "./utils/editor";
 
 export default {
   name: "App",

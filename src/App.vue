@@ -114,6 +114,7 @@
       </template>
     </div>
     <Map
+      @map-click="mapClick"
       @wpt-click="wptClick"
       class="flex flex-grow border border-gray-400 rounded shadow-md m-2 ml-0 p-2"
       v-if="!mapLoading && editor"
@@ -188,6 +189,9 @@ export default {
     },
     redo() {
       this.editor.redo();
+    },
+    mapClick({ event, svgpoint }) {
+      this.editor.mapClick({ event, svgpoint });
     },
     wptClick(event) {
       this.editor.wptClick(event);

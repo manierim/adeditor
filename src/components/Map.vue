@@ -1,110 +1,131 @@
 <template>
   <div>
-    <svg class="flex flex-grow" id="svgMap" ref="svgMap">
-      <g>
-        <polygon
-          class="mapbounds"
-          fill="transparent"
-          :points="mapBoundsPoints"
-        ></polygon>
-
-        <image
-          v-if="mapImageURL"
-          :x="-editor.map.size / 2"
-          :y="-editor.map.size / 2"
-          :width="editor.map.size"
-          :height="editor.map.size"
-          :href="mapImageURL"
-        />
-      </g>
-
-      <g class="targets">
-        <text
-          v-for="marker in editor.map.markers()"
-          :key="marker.index"
-          class="marker-label"
-          text-anchor="middle"
-          :x="marker.wpt.x"
-          :y="marker.wpt.z - 4"
+    <svg
+      class="flex flex-grow"
+      id="svgMap"
+      ref="svgMap"
+      @mousemove="mapMouseMove"
+    >
+      <g class="svg-pan-zoom_viewport">
+        <g
+          pointer-events="fill"
+          @mousedown="mouseBtn"
+          @mouseup="mouseBtn"
+          @mousemove="mouseBtn"
         >
-          {{ marker.name }}
-          <title v-if="marker.folder" v-text="marker.folder" />
-        </text>
-      </g>
+          <polygon
+            id="mapbounds"
+            class="mapbounds"
+            fill="transparent"
+            :points="mapBoundsPoints"
+          ></polygon>
 
-      <g class="links">
-        <defs>
-          <marker
-            id="arrow"
-            markerWidth=".5"
-            markerHeight=".5"
-            refX="-.4"
-            refY=".25"
-            orient="auto"
-            markerUnits="strokeWidth"
-          >
-            <path d="M0,0 L.5,.25 L0,.5" />
-          </marker>
-        </defs>
-        <g v-for="(path, index) in drawnPaths" :key="index">
-          <title v-if="debug">path # {{ index }}</title>
-          <path
-            class="link"
-            :class="
-              path.bidirectional
-                ? 'bidirectional'
-                : path.reverse
-                ? 'reverse'
-                : 'unidirectional'
-            "
-            :d="path.d"
+          <image
+            v-if="mapImageURL"
+            :x="-editor.map.size / 2"
+            :y="-editor.map.size / 2"
+            :width="editor.map.size"
+            :height="editor.map.size"
+            :href="mapImageURL"
           />
         </g>
-      </g>
 
-      <g class="waypoints">
-        <g
-          v-for="waypoint in editor.map.waypointsArray()"
-          :key="waypoint.index"
-        >
-          <title v-if="debug || waypoint.marker">
-            {{
-              waypoint.marker
-                ? (waypoint.marker.folder
-                    ? waypoint.marker.folder + " / "
-                    : "") +
-                  waypoint.marker.name +
-                  (debug ? " | " : "")
-                : ""
-            }}
-            {{ debug ? "wpt # " + waypoint.index : "" }}
-          </title>
+        <g class="targets">
+          <text
+            v-for="marker in editor.map.markers()"
+            :key="marker.index"
+            class="marker-label"
+            text-anchor="middle"
+            :x="marker.wpt.x"
+            :y="marker.wpt.z - 4"
+          >
+            {{ marker.name }}
+            <title v-if="marker.folder" v-text="marker.folder" />
+          </text>
+        </g>
+
+        <g class="links">
+          <defs>
+            <marker
+              id="arrow"
+              markerWidth=".5"
+              markerHeight=".5"
+              refX="-.4"
+              refY=".25"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M0,0 L.5,.25 L0,.5" />
+            </marker>
+          </defs>
+          <g v-for="(path, index) in drawnPaths" :key="index">
+            <title v-if="debug">path # {{ index }}</title>
+            <path
+              class="link"
+              :class="
+                path.bidirectional
+                  ? 'bidirectional'
+                  : path.reverse
+                  ? 'reverse'
+                  : 'unidirectional'
+              "
+              :d="path.d"
+            />
+          </g>
+        </g>
+
+        <g class="waypoints">
+          <g
+            v-for="waypoint in editor.map.waypointsArray()"
+            :key="waypoint.index"
+          >
+            <title v-if="debug || waypoint.marker">
+              {{
+                waypoint.marker
+                  ? (waypoint.marker.folder
+                      ? waypoint.marker.folder + " / "
+                      : "") +
+                    waypoint.marker.name +
+                    (debug ? " | " : "")
+                  : ""
+              }}
+              {{
+                debug
+                  ? "wpt # " +
+                    waypoint.index +
+                    " @ " +
+                    waypoint.x.toFixed(3) +
+                    ", " +
+                    waypoint.z.toFixed(3)
+                  : ""
+              }}
+            </title>
+            <circle
+              @click="$emit('wpt-click', { event: $event, waypoint })"
+              :class="[
+                waypoint.isNode() ? 'node' : 'waypoint',
+                { marker: waypoint.marker ? true : false }
+              ]"
+              :cx="waypoint.x"
+              :cy="waypoint.z"
+              :r="waypoint.marker ? 1.2 : waypoint.isNode() ? 0.5 : 0.3"
+            />
+          </g>
+        </g>
+
+        <g class="selection">
           <circle
-            @click="$emit('wpt-click', { event: $event, waypoint })"
-            :class="[
-              waypoint.isNode() ? 'node' : 'waypoint',
-              { marker: waypoint.marker ? true : false }
-            ]"
+            class="waypoint"
+            :class="{
+              single: editor.selection.length === 1 && selectedWpts.length === 1
+            }"
+            v-for="waypoint in selectedWpts"
+            :key="waypoint.index"
             :cx="waypoint.x"
             :cy="waypoint.z"
-            :r="waypoint.marker ? 1.2 : waypoint.isNode() ? 0.5 : 0.3"
-          />
+            :r="waypoint.marker ? 1.4 : waypoint.isNode() ? 0.7 : 0.5"
+          ></circle>
         </g>
-      </g>
-
-      <g class="selection">
-        <circle
-          class="waypoint"
-          :class="{
-            single:
-              editor.selection.length === 1 && selectedWpts.length === 1
-          }"
-          v-for="waypoint in selectedWpts"
-          :key="waypoint.index"
-          :cx="waypoint.x"
-          :cy="waypoint.z"
-          :r="waypoint.marker ? 1.4 : waypoint.isNode() ? 0.7 : 0.5"
-        ></circle>
       </g>
     </svg>
 
@@ -113,6 +134,9 @@
         class="m-2 p-1 bg-gray-200 border border-gray-700 border-solid rounded"
       >
         Segments drawn: {{ segments.reduced }} of {{ segments.total }}
+        <span v-if="mouse">
+          | mouse {{ mouse.x.toFixed(3) }} {{ mouse.y.toFixed(3) }}
+        </span>
       </div>
     </div>
   </div>
@@ -124,7 +148,9 @@ import svghandling from "../utils/svghandling";
 export default {
   name: "Map",
   data: () => ({
-    debug: true
+    debug: true,
+    leftclicking: null,
+    mouse: null
   }),
   props: {
     editor: Object,
@@ -176,6 +202,34 @@ export default {
     }
   },
   methods: {
+    mouseEventMapCoords(event) {
+      return this.handler.getSvgPoint(event.offsetX, event.offsetY);
+    },
+    mapMouseMove(event) {
+      this.mouse = this.mouseEventMapCoords(event);
+    },
+    mouseBtn(event) {
+      if (event.button !== 0) {
+        return;
+      }
+
+      if (event.type === "mousedown") {
+        this.leftclicking = true;
+      }
+
+      if (event.type === "mousemove") {
+        this.leftclicking = false;
+      }
+
+      if (event.type === "mouseup") {
+        if (this.leftclicking) {
+          this.$emit("map-click", {
+            event,
+            svgpoint: this.mouseEventMapCoords(event)
+          });
+        }
+      }
+    },
     windowResize() {
       this.handler.resize();
     },

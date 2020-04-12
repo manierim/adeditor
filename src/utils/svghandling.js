@@ -20,7 +20,7 @@ const panZoomOptions = {
       "touchend",
       "touchmove",
       "touchleave",
-      "touchcancel",
+      "touchcancel"
     ],
 
     // Init custom events handler
@@ -34,7 +34,7 @@ const panZoomOptions = {
       this.hammer = Hammer(options.svgElement, {
         inputClass: Hammer.SUPPORT_POINTER_EVENTS
           ? Hammer.PointerEventInput
-          : Hammer.TouchInput,
+          : Hammer.TouchInput
       });
       // Enable pinch
       this.hammer.get("pinch").set({ enable: true });
@@ -52,7 +52,7 @@ const panZoomOptions = {
         // Pan only the difference
         instance.panBy({
           x: ev.deltaX - pannedX,
-          y: ev.deltaY - pannedY,
+          y: ev.deltaY - pannedY
         });
         pannedX = ev.deltaX;
         pannedY = ev.deltaY;
@@ -64,12 +64,12 @@ const panZoomOptions = {
           initialScale = instance.getZoom();
           instance.zoomAtPoint(initialScale * ev.scale, {
             x: ev.center.x,
-            y: ev.center.y,
+            y: ev.center.y
           });
         }
         instance.zoomAtPoint(initialScale * ev.scale, {
           x: ev.center.x,
-          y: ev.center.y,
+          y: ev.center.y
         });
       });
       // Prevent moving the page on some devices when panning over SVG
@@ -81,16 +81,32 @@ const panZoomOptions = {
     // Destroy custom events handler
     destroy() {
       this.hammer.destroy();
-    },
-  },
+    }
+  }
 };
 let instance;
 export default class svghandling {
+  svgElement;
   constructor(svgElement) {
+    this.svgElement = svgElement;
     if (instance) {
       instance.destroy();
     }
-    instance = svgPanZoom(svgElement, panZoomOptions);
+    instance = svgPanZoom(this.svgElement, panZoomOptions);
+  }
+
+  getSvgPoint(x, y) {
+    var svgDropPoint = this.svgElement.createSVGPoint();
+
+    svgDropPoint.x = x;
+    svgDropPoint.y = y;
+
+    return svgDropPoint.matrixTransform(
+      document
+        .getElementsByClassName("svg-pan-zoom_viewport")[0]
+        .getCTM()
+        .inverse()
+    );
   }
 
   resize() {

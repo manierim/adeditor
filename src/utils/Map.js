@@ -6,12 +6,14 @@ export default class Map {
   waypoints;
   size;
   paths;
+  lastid;
 
   constructor(parser) {
     this.parser = parser;
 
     this.cache = {};
     this.waypoints = {};
+    this.lastid = 0;
 
     let parsed = this.parser.parse();
 
@@ -26,7 +28,7 @@ export default class Map {
       }
       let id = index + 1;
       if (parsed.id) {
-        id = parsed.id[index];
+        id = parseInt(parsed.id[index]);
       }
 
       let linkedArray = list =>
@@ -38,14 +40,17 @@ export default class Map {
       let wpt = new Waypoint(
         this,
         id,
-        parsed.x[index],
-        parsed.y[index],
-        parsed.z[index],
+        parseFloat(parsed.x[index]),
+        parseFloat(parsed.y[index]),
+        parseFloat(parsed.z[index]),
         linkedArray(parsed.ins[index]),
         linkedArray(parsed.outs[index])
       );
 
       this.waypoints[id] = wpt;
+      if (id > this.lastid) {
+        this.lastid = id;
+      }
     }
 
     let size = 2048;
@@ -60,6 +65,25 @@ export default class Map {
     });
 
     this.buildPaths();
+  }
+
+  addWaypoint({ x, y, z }) {
+    let id = ++this.lastid;
+
+    let wpt = new Waypoint(
+      this,
+      id,
+      parseFloat(x),
+      parseFloat(y),
+      parseFloat(z),
+      [],
+      []
+    );
+    this.waypoints[id] = wpt;
+    if (this.cache["inFromOuts"]) {
+      this.cache["inFromOuts"][wpt.index] = [];
+    }
+    return wpt;
   }
 
   waypointsArray() {

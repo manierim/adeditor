@@ -7,6 +7,28 @@ class actionExecutor {
     this.editor = editor;
   }
 
+  addWaypoint(data, reverse) {
+    if (!reverse) {
+      let newPwt = this.editor.map.addWaypoint({
+        x: data.x,
+        y: data.y,
+        z: data.z
+      });
+      return {
+        action: "addWaypoint",
+        data: newPwt
+      };
+    }
+    delete this.editor.map.waypoints[data.index];
+    return {
+      action: "addWaypoint",
+      data: {
+        x: data.x,
+        y: data.y,
+        z: data.z
+      }
+    };
+  }
   removeWaypoint(data, reverse) {
     if (!reverse) {
       delete this.editor.map.waypoints[data.index];
@@ -218,11 +240,59 @@ export default class Editor {
       };
     }
 
-    if (this.doneaction(action)) {
-      return true;
+    return this.doneaction(action);
+  }
+
+  mapClick({ event, svgpoint }) {
+    let action;
+
+    if (
+      this.selection.length &&
+      !event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.metaKey
+    ) {
+      action = {
+        label: "Empty selection",
+        actions: [this.executor.selectionReplace([])]
+      };
     }
-    console.debug("keyUp", event);
-    return false;
+
+    if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
+      let y = this.map
+        .waypointsArray()
+        .sort(
+          (a, b) =>
+            Math.sqrt(
+              Math.pow(a.x - svgpoint.x, 2) + Math.pow(a.z - svgpoint.y, 2)
+            ) -
+            Math.sqrt(
+              Math.pow(b.x - svgpoint.x, 2) + Math.pow(b.z - svgpoint.y, 2)
+            )
+        )
+        .slice(0, 2);
+
+      if (y.length) {
+        y = y.reduce((sum, w) => sum + w.y, 0) / y.length;
+      } else {
+        y = 0;
+      }
+
+      action = {
+        label: "Empty selection",
+
+        actions: [
+          this.executor.addWaypoint({
+            x: +svgpoint.x.toFixed(3),
+            y: +y.toFixed(3),
+            z: +svgpoint.y.toFixed(3)
+          })
+        ]
+      };
+    }
+
+    this.doneaction(action);
   }
 
   wptClick({ event, waypoint }) {
@@ -285,9 +355,6 @@ export default class Editor {
       };
     }
 
-    if (this.doneaction(action)) {
-      return;
-    }
-    console.debug("wptClick", event, waypoint);
+    this.doneaction(action);
   }
 }

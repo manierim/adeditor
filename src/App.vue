@@ -116,6 +116,7 @@
     <Map
       @map-click="mapClick"
       @wpt-click="wptClick"
+      @wpt-dragged="wptDragged"
       class="flex flex-grow border border-gray-400 rounded shadow-md m-2 ml-0 p-2"
       v-if="!mapLoading && editor"
       :mapImageURL="mapImageURL"
@@ -195,6 +196,9 @@ export default {
     },
     wptClick(event) {
       this.editor.wptClick(event);
+    },
+    wptDragged(event) {
+      this.editor.wptDragged(event);
     }
   }
 };

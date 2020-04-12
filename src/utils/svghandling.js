@@ -95,7 +95,7 @@ export default class svghandling {
     instance = svgPanZoom(this.svgElement, panZoomOptions);
   }
 
-  getSvgPoint(x, y) {
+  getSvgPoint({ x, y }) {
     var svgDropPoint = this.svgElement.createSVGPoint();
 
     svgDropPoint.x = x;

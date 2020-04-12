@@ -101,7 +101,10 @@
               }}
             </title>
             <circle
-              @click="$emit('wpt-click', { event: $event, waypoint })"
+              class="draggable"
+              @mousedown.self.stop="wptMouseBtn({ event: $event, waypoint })"
+              @mouseup.self.stop="wptMouseBtn({ event: $event, waypoint })"
+              @mousemove.self.stop="wptMouseBtn({ event: $event, waypoint })"
               :class="[
                 waypoint.isNode() ? 'node' : 'waypoint',
                 { marker: waypoint.marker ? true : false }
@@ -150,7 +153,8 @@ export default {
   data: () => ({
     debug: true,
     leftclicking: null,
-    mouse: null
+    mouse: null,
+    wptDragging: false
   }),
   props: {
     editor: Object,
@@ -202,11 +206,37 @@ export default {
     }
   },
   methods: {
+    wptMouseBtn({ event, waypoint }) {
+      if (event.button === 0) {
+        if (event.type === "mousedown") {
+          this.wptDragging = {
+            waypoint,
+            dragstart: { x: waypoint.x, z: waypoint.z }
+          };
+        }
+
+        if (this.wptDragging && event.type === "mouseup") {
+          if (this.wptDragging.dragged) {
+            this.$emit("wpt-dragged", this.wptDragging);
+          } else {
+            this.$emit("wpt-click", { event, waypoint });
+          }
+          this.wptDragging = false;
+        }
+      }
+    },
+
     mouseEventMapCoords(event) {
-      return this.handler.getSvgPoint(event.offsetX, event.offsetY);
+      return this.handler.getSvgPoint({ x: event.offsetX, y: event.offsetY });
     },
     mapMouseMove(event) {
       this.mouse = this.mouseEventMapCoords(event);
+
+      if (event.button === 0 && this.wptDragging) {
+        this.wptDragging.dragged = true;
+        this.wptDragging.waypoint.x = +this.mouse.x.toFixed(3);
+        this.wptDragging.waypoint.z = +this.mouse.y.toFixed(3);
+      }
     },
     mouseBtn(event) {
       if (event.button !== 0) {
@@ -289,6 +319,10 @@ export default {
   fill: white;
   stroke: rgb(59, 56, 39);
   stroke-width: 2;
+}
+
+.draggable {
+  cursor: move;
 }
 
 .waypoints .waypoint {

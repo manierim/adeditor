@@ -87,6 +87,33 @@ class actionExecutor {
     };
   }
 
+  movedWaypoint({ waypoint, dragstart, dragend }, reverse) {
+    if (!reverse) {
+      if (dragend) {
+        waypoint.x = dragend.x;
+        waypoint.z = dragend.z;
+      }
+
+      return {
+        action: "movedWaypoint",
+        data: { waypoint, dragstart }
+      };
+    }
+
+    dragend = {
+      x: waypoint.x,
+      z: waypoint.z
+    };
+
+    waypoint.x = dragstart.x;
+    waypoint.z = dragstart.z;
+
+    return {
+      action: "movedWaypoint",
+      data: { waypoint, dragstart, dragend }
+    };
+  }
+
   linkWayPointsToggle(data) {
     let wptA = data[0];
     let wptB = data[1];
@@ -243,6 +270,12 @@ export default class Editor {
     return this.doneaction(action);
   }
 
+  wptDragged({ waypoint, dragstart }) {
+    this.doneaction({
+      label: "Move Waypont # " + waypoint.index,
+      actions: [this.executor.movedWaypoint({ waypoint, dragstart })]
+    });
+  }
   mapClick({ event, svgpoint }) {
     let action;
 

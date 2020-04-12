@@ -72,6 +72,15 @@
               :d="path.d"
             />
           </g>
+
+          <g class="editing" v-if="pathsInEditing">
+            <path
+              v-for="path in pathsInEditing"
+              :key="path.sindex"
+              class="link"
+              :d="path.d"
+            />
+          </g>
         </g>
 
         <g class="waypoints">
@@ -101,13 +110,18 @@
               }}
             </title>
             <circle
-              class="draggable"
               @mousedown.self.stop="wptMouseBtn({ event: $event, waypoint })"
               @mouseup.self.stop="wptMouseBtn({ event: $event, waypoint })"
               @mousemove.self.stop="wptMouseBtn({ event: $event, waypoint })"
               :class="[
                 waypoint.isNode() ? 'node' : 'waypoint',
-                { marker: waypoint.marker ? true : false }
+                {
+                  marker: waypoint.marker ? true : false,
+                  draggable:
+                    wptDragging &&
+                    wptDragging.dragged &&
+                    wptDragging.waypoint === waypoint
+                }
               ]"
               :cx="waypoint.x"
               :cy="waypoint.z"
@@ -166,6 +180,18 @@ export default {
         .filter(item => item && item.waypoint)
         .map(({ waypoint }) => waypoint);
     },
+    pathsInEditing() {
+      if (
+        this.wptDragging &&
+        this.wptDragging.dragged &&
+        this.wptDragging.waypoint
+      ) {
+        return this.wptDragging.waypoint.paths().map((p, index) => {
+          return { index, d: this.pathDef(p.wpts) };
+        });
+      }
+      return null;
+    },
     drawnPaths() {
       return this.editor.map.paths.map(path => {
         let reduced = this.reducePath(path.wpts);
@@ -176,8 +202,7 @@ export default {
 
         dpath.segments = path.wpts.length - 1;
         dpath.reducedsegments = reduced.length - 1;
-        dpath.d =
-          "M" + reduced.map(node => [node.x, node.z].join(",")).join(" L");
+        dpath.d = this.pathDef(reduced);
 
         return dpath;
       });
@@ -206,12 +231,16 @@ export default {
     }
   },
   methods: {
+    pathDef(wpts) {
+      return "M" + wpts.map(wpt => [wpt.x, wpt.z].join(",")).join(" L");
+    },
     wptMouseBtn({ event, waypoint }) {
       if (event.button === 0) {
         if (event.type === "mousedown") {
           this.wptDragging = {
             waypoint,
-            dragstart: { x: waypoint.x, z: waypoint.z }
+            dragstart: { x: waypoint.x, z: waypoint.z },
+            dragged: false
           };
         }
 
@@ -366,6 +395,12 @@ export default {
   stroke: rgb(75, 255, 75);
   stroke-opacity: 0.6;
   stroke-width: 1.5;
+}
+
+.links .editing .link {
+  stroke: rgb(97, 68, 14);
+  stroke-opacity: 1;
+  stroke-width: .4;
 }
 
 .links .link:hover {

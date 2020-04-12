@@ -167,16 +167,18 @@ export default class Map {
             BidirectionalInitialWaypointsDone.push(prevwpt.index);
           }
 
-          wpts.forEach(wptInPath => {
-            wptInPath.addPath(paths.length);
-          });
-
-          paths.push({
+          let path = {
             index: paths.length,
             bidirectional: linkType === "bidirectional",
             reverse: linkType === "reverse-out",
             wpts: wpts
+          };
+
+          wpts.forEach(wptInPath => {
+            wptInPath.addPath(path);
           });
+
+          paths.push(path);
         });
       });
     };

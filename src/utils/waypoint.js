@@ -18,8 +18,6 @@ export default class Waypoint {
 
     this.ins = ins;
     this.outs = outs;
-
-    this.paths = [];
   }
 
   inFromOuts() {
@@ -184,7 +182,13 @@ export default class Waypoint {
     return linkedWpts;
   }
 
-  addPath(pathIndex) {
-    this.paths.push(pathIndex);
+  paths() {
+    return this.get("paths", []);
+  }
+
+  addPath(path) {
+    let paths = this.get("paths", []);
+    paths.push(path);
+    this.set("paths", paths);
   }
 }

@@ -68,32 +68,47 @@ class actionExecutor {
   linkWayPointsToggle(data) {
     let wptA = data[0];
     let wptB = data[1];
+    let reverse = data[2];
 
-    if (
-      wptA.links[wptB.index] === undefined &&
-      wptB.links[wptA.index] === undefined
-    ) {
+    let wptALinkType = wptA.linkType(wptB.index);
+    let wptBLinkType = wptB.linkType(wptA.index);
+
+    if (wptALinkType === null && wptBLinkType === null) {
       // add a -> b
-      wptA.links[wptB.index] = true;
-      wptB.links[wptA.index] = false;
+      wptA.outs.push(wptB.index);
+      if (!reverse) {
+        wptB.ins.push(wptA.index);
+      }
     } else if (
-      wptA.links[wptB.index] === true &&
-      wptB.links[wptA.index] === false
+      (wptALinkType === "out" && wptBLinkType === "in") ||
+      (wptALinkType === "reverse-out" && wptBLinkType === "reverse-in")
     ) {
       // remove a -> b
-      delete wptA.links[wptB.index];
-      delete wptB.links[wptA.index];
+      let idxOut = wptA.outs.indexOf(wptB.index);
+      if (idxOut !== -1) {
+        wptA.outs.splice(idxOut, 1);
+      }
+      let idxIn = wptB.ins.indexOf(wptA.index);
+      if (idxIn !== -1) {
+        wptB.ins.splice(idxIn, 1);
+      }
     } else if (
-      wptA.links[wptB.index] === false &&
-      wptB.links[wptA.index] === true
+      (wptALinkType === "in" && wptBLinkType === "out") ||
+      (wptALinkType === "reverse-in" && wptBLinkType === "reverse-out")
     ) {
       // switch to bidirectional
-      wptA.links[wptB.index] = null;
-      wptB.links[wptA.index] = null;
+      wptA.outs.push(wptB.index);
+      wptB.ins.push(wptA.index);
     } else {
       // bidirectional to b -> a
-      wptA.links[wptB.index] = false;
-      wptB.links[wptA.index] = true;
+      let idxOut = wptA.outs.indexOf(wptB.index);
+      if (idxOut !== -1) {
+        wptA.outs.splice(idxOut, 1);
+      }
+      let idxIn = wptB.ins.indexOf(wptA.index);
+      if (idxIn !== -1) {
+        wptB.ins.splice(idxIn, 1);
+      }
     }
 
     return {
@@ -258,13 +273,14 @@ export default class Editor {
       this.selection.slice(0)[0].waypoint &&
       this.selection.slice(0)[0].waypoint.index !== waypoint.index &&
       !event.ctrlKey &&
-      event.shiftKey &&
-      !event.altKey
+      event.shiftKey
     ) {
       let origin = this.selection.slice(0)[0].waypoint;
       action = {
         label: "Toggle Link # " + origin.index + " -> # " + waypoint.index,
-        actions: [this.executor.linkWayPointsToggle([origin, waypoint])],
+        actions: [
+          this.executor.linkWayPointsToggle([origin, waypoint, event.altKey])
+        ],
         rebuildPaths: true
       };
     }

@@ -104,29 +104,34 @@ export default class Waypoint {
     let cacheKey = "linkType-" + targetIndex;
     let linkType = this.get(cacheKey);
     if (linkType === undefined) {
-      linkType = "in";
+      linkType = null;
 
-      if (
-        this.existingOuts().indexOf(targetIndex) !== -1 &&
-        this.existingIns().indexOf(targetIndex) !== -1
-      ) {
-        linkType = "bidirectional";
-      } else if (
-        this.existingIns().indexOf(targetIndex) !== -1 &&
-        this.map.waypoints[targetIndex].existingOuts().indexOf(this.index) !==
-          -1
-      ) {
+      if (this.linkedWpts().indexOf(targetIndex) !== -1) {
         linkType = "in";
-      } else if (
-        this.existingOuts().indexOf(targetIndex) !== -1 &&
-        this.map.waypoints[targetIndex].existingIns().indexOf(this.index) !== -1
-      ) {
-        linkType = "out";
-      } else if (this.existingOuts().indexOf(targetIndex) !== -1) {
-        linkType = "reverse-out";
-      } else {
-        linkType = "reverse-in";
+        if (
+          this.existingOuts().indexOf(targetIndex) !== -1 &&
+          this.existingIns().indexOf(targetIndex) !== -1
+        ) {
+          linkType = "bidirectional";
+        } else if (
+          this.existingIns().indexOf(targetIndex) !== -1 &&
+          this.map.waypoints[targetIndex].existingOuts().indexOf(this.index) !==
+            -1
+        ) {
+          linkType = "in";
+        } else if (
+          this.existingOuts().indexOf(targetIndex) !== -1 &&
+          this.map.waypoints[targetIndex].existingIns().indexOf(this.index) !==
+            -1
+        ) {
+          linkType = "out";
+        } else if (this.existingOuts().indexOf(targetIndex) !== -1) {
+          linkType = "reverse-out";
+        } else {
+          linkType = "reverse-in";
+        }
       }
+
       this.set(cacheKey, linkType);
     }
     return linkType;
@@ -166,7 +171,7 @@ export default class Waypoint {
   linkedWpts() {
     let linkedWpts = this.get("linkedWpts");
 
-    if (!linkedWpts) {
+    if (linkedWpts === undefined) {
       linkedWpts = [
         ...new Set([
           ...this.existingIns(),

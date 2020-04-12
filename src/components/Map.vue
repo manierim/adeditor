@@ -133,11 +133,16 @@
         <g class="selection">
           <circle
             class="waypoint"
-            :class="{
-              single: editor.selection.length === 1 && selectedWpts.length === 1
-            }"
-            v-for="waypoint in selectedWpts"
+            v-for="(waypoint, selIndex) in selectedWpts"
             :key="waypoint.index"
+            :class="{
+              single:
+                editor.selection.length === 1 && selectedWpts.length === 1,
+              first: editor.selection.length > 1 && selIndex === 0,
+              last:
+                editor.selection.length > 1 &&
+                selIndex === editor.selection.length - 1
+            }"
             :cx="waypoint.x"
             :cy="waypoint.z"
             :r="waypoint.marker ? 1.4 : waypoint.isNode() ? 0.7 : 0.5"
@@ -434,5 +439,12 @@ export default {
 }
 .selection .waypoint.single {
   stroke: rgb(12, 255, 24);
+}
+
+.selection .waypoint.first {
+  stroke: rgb(12, 255, 243);
+}
+.selection .waypoint.last {
+  stroke: rgb(12, 109, 255);
 }
 </style>

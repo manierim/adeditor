@@ -95,6 +95,10 @@
       <g class="selection">
         <circle
           class="waypoint"
+          :class="{
+            single:
+              editor.selection.length === 1 && selectedWpts.length === 1
+          }"
           v-for="waypoint in selectedWpts"
           :key="waypoint.index"
           :cx="waypoint.x"
@@ -304,5 +308,8 @@ export default {
   fill: none;
   stroke-width: 0.3;
   stroke: rgb(9, 0, 139);
+}
+.selection .waypoint.single {
+  stroke: rgb(12, 255, 24);
 }
 </style>

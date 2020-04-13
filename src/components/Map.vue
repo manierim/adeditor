@@ -252,6 +252,23 @@ export default {
     pathDef(wpts) {
       return "M" + wpts.map(wpt => [wpt.x, wpt.z].join(",")).join(" L");
     },
+    mapMouseMove(event) {
+      this.mouse = this.mouseEventMapCoords(event);
+
+      if (event.button === 0 && this.wptDragging) {
+        if (
+          !this.wptDragging.dragged &&
+          Math.pow(event.movementX, 2) + Math.pow(event.movementY, 2) > 9
+        ) {
+          this.wptDragging.dragged = true;
+        }
+
+        if (this.wptDragging.dragged) {
+          this.wptDragging.waypoint.x = +this.mouse.x.toFixed(3);
+          this.wptDragging.waypoint.z = +this.mouse.y.toFixed(3);
+        }
+      }
+    },
     wptMouseBtn({ event, waypoint }) {
       if (event.button === 0) {
         if (event.type === "mousedown") {
@@ -276,15 +293,7 @@ export default {
     mouseEventMapCoords(event) {
       return this.handler.getSvgPoint({ x: event.offsetX, y: event.offsetY });
     },
-    mapMouseMove(event) {
-      this.mouse = this.mouseEventMapCoords(event);
 
-      if (event.button === 0 && this.wptDragging) {
-        this.wptDragging.dragged = true;
-        this.wptDragging.waypoint.x = +this.mouse.x.toFixed(3);
-        this.wptDragging.waypoint.z = +this.mouse.y.toFixed(3);
-      }
-    },
     mouseBtn(event) {
       if (event.button !== 0) {
         return;

@@ -151,14 +151,18 @@
       </g>
     </svg>
 
-    <div class="absolute object-left-top text-xs" v-if="debug">
+    <div class="absolute object-left-top text-xs">
       <div
         class="m-2 p-1 bg-gray-200 border border-gray-700 border-solid rounded"
       >
-        Segments drawn: {{ segments.reduced }} of {{ segments.total }}
-        <span v-if="mouse">
-          | mouse {{ mouse.x.toFixed(3) }} {{ mouse.y.toFixed(3) }}
-        </span>
+        <div v-if="debug">
+          Segments drawn: {{ segments.reduced }} of {{ segments.total }}
+        </div>
+
+        <div v-if="mouse">
+          Mouse @ {{ mouse.x.toFixed(3) }} {{ mouse.y.toFixed(3) }}
+        </div>
+        <div v-if="distance">Distance {{ distance.toFixed(3) }}</div>
       </div>
     </div>
   </div>
@@ -180,6 +184,15 @@ export default {
     mapImageURL: String
   },
   computed: {
+    distance() {
+      if (this.selectedWpts.length === 2) {
+        return Math.sqrt(
+          Math.pow(this.selectedWpts[0].x - this.selectedWpts[1].x, 2) +
+            Math.pow(this.selectedWpts[0].z - this.selectedWpts[1].z, 2)
+        );
+      }
+      return null;
+    },
     selectedWpts() {
       return this.editor.selection
         .filter(item => item && item.waypoint)

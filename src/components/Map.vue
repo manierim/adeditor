@@ -1,7 +1,7 @@
 <template>
   <div>
     <svg
-      class="flex flex-grow"
+      class="flex flex-grow bg-gray-200"
       id="svgMap"
       ref="svgMap"
       @mousemove="mapMouseMove"
@@ -361,7 +361,7 @@ export default {
 
 .waypoints .waypoint {
   fill: transparent;
-  stroke: rgb(78, 64, 63);
+  stroke: rgb(255, 101, 0);
   stroke-width: 0.1;
 }
 
@@ -370,28 +370,27 @@ export default {
 }
 
 .waypoints .node {
-  fill: orange;
+  fill: rgb(255, 166, 0);
   stroke: rgb(255, 0, 0);
   stroke-width: 0.3;
 }
 
 .waypoints .node:hover {
   fill: rgb(78, 64, 63);
-  stroke: rgb(78, 64, 63);
 }
 
 .waypoints .marker {
-  fill: rgb(4, 0, 255);
-  stroke: rgb(0, 225, 255);
+  fill: rgb(92, 60, 2);
+  stroke: rgb(231, 152, 48);
   stroke-width: 0.4;
 }
 
 .marker-label {
   font-size: 10px;
   font-weight: 700;
-  fill: rgb(9, 0, 139);
-  stroke: rgb(152, 169, 192);
-  stroke-width: 0.3;
+  fill: rgb(92, 60, 2);
+  stroke: rgb(255, 166, 0);
+  stroke-width: 0.2;
 }
 
 .links .link {
@@ -405,7 +404,7 @@ export default {
 .links .editing .link {
   stroke: rgb(97, 68, 14);
   stroke-opacity: 1;
-  stroke-width: .4;
+  stroke-width: 0.4;
 }
 
 .links .link:hover {

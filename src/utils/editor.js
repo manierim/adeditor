@@ -19,7 +19,7 @@ class actionExecutor {
         data: newPwt
       };
     }
-    delete this.editor.map.waypoints[data.index];
+    this.editor.map.removeWaypoint(data.index);
     return {
       action: "addWaypoint",
       data: {
@@ -31,14 +31,15 @@ class actionExecutor {
   }
   removeWaypoint(data, reverse) {
     if (!reverse) {
-      delete this.editor.map.waypoints[data.index];
+      this.editor.map.removeWaypoint(data.index);
 
       return {
         action: "removeWaypoint",
         data
       };
     }
-    this.editor.map.waypoints[data.index] = data;
+
+    this.editor.map.addWaypoint({ waypoint: data });
 
     return {
       action: "removeWaypoint",
@@ -313,7 +314,7 @@ export default class Editor {
       }
 
       action = {
-        label: "Empty selection",
+        label: "Add new Waypoint",
 
         actions: [
           this.executor.addWaypoint({

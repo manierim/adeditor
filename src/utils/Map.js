@@ -1,4 +1,5 @@
 import Waypoint from "./waypoint";
+import Vue from "vue";
 
 export default class Map {
   parser;
@@ -67,23 +68,30 @@ export default class Map {
     this.buildPaths();
   }
 
-  addWaypoint({ x, y, z }) {
-    let id = ++this.lastid;
+  addWaypoint({ waypoint, x, y, z }) {
+    if (!waypoint) {
+      let id = ++this.lastid;
 
-    let wpt = new Waypoint(
-      this,
-      id,
-      parseFloat(x),
-      parseFloat(y),
-      parseFloat(z),
-      [],
-      []
-    );
-    this.waypoints[id] = wpt;
-    if (this.cache["inFromOuts"]) {
-      this.cache["inFromOuts"][wpt.index] = [];
+      waypoint = new Waypoint(
+        this,
+        id,
+        parseFloat(x),
+        parseFloat(y),
+        parseFloat(z),
+        [],
+        []
+      );
     }
-    return wpt;
+
+    Vue.set(this.waypoints, waypoint.index, waypoint);
+
+    if (this.cache["inFromOuts"]) {
+      this.cache["inFromOuts"][waypoint.index] = [];
+    }
+    return waypoint;
+  }
+  removeWaypoint(index) {
+    Vue.delete(this.waypoints, index);
   }
 
   waypointsArray() {

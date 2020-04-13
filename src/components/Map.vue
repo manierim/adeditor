@@ -112,7 +112,7 @@
             <circle
               @mousedown.self.stop="wptMouseBtn({ event: $event, waypoint })"
               @mouseup.self.stop="wptMouseBtn({ event: $event, waypoint })"
-              @mousemove.self.stop="wptMouseBtn({ event: $event, waypoint })"
+              @mousemove.self.stop="mapMouseMove"
               :class="[
                 waypoint.isNode() ? 'node' : 'waypoint',
                 {

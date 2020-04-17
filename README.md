@@ -1,24 +1,6 @@
-# adeditor
+# adeditor ALFA
 
-## Project setup
-```
-yarn install
-```
+An online editor for [FS19_AutoDrive](https://github.com/Stephan-S/FS19_AutoDrive) mod for Farming Simulator 2019
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
-
-### Compiles and minifies for production
-```
-yarn build
-```
-
-### Lints and fixes files
-```
-yarn lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## ALFA Version
+The project is currently in early - prototyping - stage.

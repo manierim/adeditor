@@ -3,7 +3,7 @@
     <!-- Left Col -->
     <div
       class="flex flex-grow-0 flex-col items-stretch p-2"
-      style="min-width: 265px;"
+      style="width: 16em;"
     >
       <Card class="flex-grow-0 mb-2">
         <template #title>
@@ -23,27 +23,64 @@
       </Card>
 
       <template v-if="!mapLoading && editor">
+        <Card
+          v-if="editor.selection.length"
+          :collapsable="false"
+          class="flex-grow-0 mb-2"
+        >
+          <template #title>
+            Selected items
+          </template>
+          <ul>
+            <li
+              v-for="(item, index) in editor.selection.filter((item) => item)"
+              :key="index"
+            >
+              <template v-if="item.waypoint">
+                <span>Waypoint # {{ item.waypoint.index }}</span>
+                <span
+                  v-if="item.waypoint.marker"
+                  v-text="item.waypoint.marker.name"
+                  class="ml-1 font-bold"
+                />
+              </template>
+              <template v-if="item.path">
+                <span
+                  >Path # {{ item.path.index }} ({{
+                    item.path.wpts.length
+                  }}
+                  wpts)</span
+                >
+              </template>
+            </li>
+          </ul>
+        </Card>
+
         <Card :collapsable="false" class="flex-grow mb-2">
           <template #title>
             Tools
           </template>
-          <div v-if="editor.selection.length" class="flex flex-col text-sm">
-            <h3>Selected items</h3>
-            <ul>
-              <li
-                v-for="(item, index) in editor.selection.filter(item => item)"
-                :key="index"
-              >
-                <template v-if="item.waypoint">
-                  <span>Waypoint # {{ item.waypoint.index }}</span>
-                  <span
-                    v-if="item.waypoint.marker"
-                    v-text="item.waypoint.marker.name"
-                    class="ml-1 font-bold"
-                  />
-                </template>
-              </li>
-            </ul>
+
+          <div
+            v-for="toolInstance in editor.toolsAvailable"
+            :key="toolInstance.action"
+            class="flex flex-col self-stretch"
+          >
+            <button
+              @click="toolAction(toolInstance)"
+              class="inline-flex items-center items-stretch bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+            >
+              <span
+                class="material-icons fill-current mt-.5 w-4 h-4 mr-3"
+                v-text="toolInstance.icon"
+              />
+              <span v-text="toolInstance.label">Download</span>
+            </button>
+
+            <div
+              class="flex italic text-xs"
+              v-text="toolInstance.description"
+            ></div>
           </div>
         </Card>
 
@@ -115,6 +152,7 @@
     </div>
     <Map
       @map-click="mapClick"
+      @path-click="pathClick"
       @wpt-click="wptClick"
       @wpt-dragged="wptDragged"
       class="flex flex-grow border border-gray-400 rounded shadow-md m-2 ml-0 p-2"
@@ -137,7 +175,7 @@ export default {
   components: {
     Card,
     LoadRoute,
-    Map
+    Map,
   },
   data: () => ({
     editor: null,
@@ -147,8 +185,8 @@ export default {
     defaultMapSizes: {
       2048: "default",
       4096: "4x",
-      8192: "8x"
-    }
+      8192: "8x",
+    },
   }),
   computed: {
     factor() {
@@ -161,11 +199,11 @@ export default {
       }
 
       return "custom";
-    }
+    },
   },
 
   mounted() {
-    window.addEventListener("keyup", event => {
+    window.addEventListener("keyup", (event) => {
       if (this.editor && this.editor.keyUp(event)) {
         event.preventDefault();
       }
@@ -191,16 +229,22 @@ export default {
     redo() {
       this.editor.redo();
     },
+    toolAction(toolInstance) {
+      this.editor.toolAction(toolInstance);
+    },
     mapClick({ event, svgpoint }) {
       this.editor.mapClick({ event, svgpoint });
+    },
+    pathClick(event) {
+      this.editor.pathClick(event);
     },
     wptClick(event) {
       this.editor.wptClick(event);
     },
     wptDragged(event) {
       this.editor.wptDragged(event);
-    }
-  }
+    },
+  },
 };
 </script>
 

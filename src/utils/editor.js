@@ -1,3 +1,5 @@
+import { closestPointToLine } from "./math";
+
 const maxUndos = 50;
 
 class actionExecutor {
@@ -10,13 +12,13 @@ class actionExecutor {
   addWaypoint(data, reverse) {
     if (!reverse) {
       let newPwt = this.editor.map.addWaypoint({
-        x: data.x,
-        y: data.y,
-        z: data.z
+        x: +data.x.toFixed(3),
+        y: +data.y.toFixed(3),
+        z: +data.z.toFixed(3),
       });
       return {
         action: "addWaypoint",
-        data: newPwt
+        data: newPwt,
       };
     }
     this.editor.map.removeWaypoint(data.index);
@@ -25,8 +27,8 @@ class actionExecutor {
       data: {
         x: data.x,
         y: data.y,
-        z: data.z
-      }
+        z: data.z,
+      },
     };
   }
   removeWaypoint(data, reverse) {
@@ -35,7 +37,7 @@ class actionExecutor {
 
       return {
         action: "removeWaypoint",
-        data
+        data,
       };
     }
 
@@ -43,7 +45,7 @@ class actionExecutor {
 
     return {
       action: "removeWaypoint",
-      data
+      data,
     };
   }
 
@@ -51,21 +53,21 @@ class actionExecutor {
     if (!reverse) {
       this.editor.selection.push(data);
       return {
-        action: "selectionAdd"
+        action: "selectionAdd",
       };
     }
 
     data = this.editor.selection.pop();
     return {
       action: "selectionAdd",
-      data
+      data,
     };
   }
 
   selectionReplace(data) {
     let remember = {
       action: "selectionReplace",
-      data: this.editor.selection.slice()
+      data: this.editor.selection.slice(),
     };
     this.editor.selection = data;
     return remember;
@@ -77,14 +79,14 @@ class actionExecutor {
         action: "selectionRemoveAtIndex",
         data: {
           index: data,
-          item: this.editor.selection.splice(data, 1)[0]
-        }
+          item: this.editor.selection.splice(data, 1)[0],
+        },
       };
     }
     this.editor.selection.splice(data.index, 0, data.item);
     return {
       action: "selectionRemoveAtIndex",
-      data: data.index
+      data: data.index,
     };
   }
 
@@ -97,13 +99,13 @@ class actionExecutor {
 
       return {
         action: "movedWaypoint",
-        data: { waypoint, dragstart }
+        data: { waypoint, dragstart },
       };
     }
 
     dragend = {
       x: waypoint.x,
-      z: waypoint.z
+      z: waypoint.z,
     };
 
     waypoint.x = dragstart.x;
@@ -111,7 +113,60 @@ class actionExecutor {
 
     return {
       action: "movedWaypoint",
-      data: { waypoint, dragstart, dragend }
+      data: { waypoint, dragstart, dragend },
+    };
+  }
+
+  alignWpts({ wpts, movedWpts }, reverse) {
+    if (wpts && !reverse) {
+      let start = wpts[0];
+      let end = wpts.slice(-1)[0];
+
+      let movedWpts = [];
+
+      wpts.slice(1, -1).forEach((wpt) => {
+        let newPos = closestPointToLine(wpt, start, end);
+        if (newPos) {
+          movedWpts.push({
+            wpt,
+            original: {
+              x: wpt.x,
+              z: wpt.z,
+            },
+          });
+
+          wpt.x = newPos.x;
+          wpt.z = newPos.z;
+        }
+      });
+
+      if (movedWpts.length) {
+        return {
+          action: "alignWpts",
+          data: { movedWpts },
+        };
+      }
+      return;
+    }
+
+    let originalwpts = [];
+
+    movedWpts.forEach(({ wpt, original }) => {
+      originalwpts.push({
+        wpt,
+        original: {
+          x: wpt.x,
+          z: wpt.z,
+        },
+      });
+
+      wpt.x = original.x;
+      wpt.z = original.z;
+    });
+
+    return {
+      action: "alignWpts",
+      data: { movedWpts: originalwpts },
     };
   }
 
@@ -163,7 +218,7 @@ class actionExecutor {
 
     return {
       action: "linkWayPointsToggle",
-      data
+      data,
     };
   }
 }
@@ -174,6 +229,7 @@ export default class Editor {
   redoables;
   map;
   selection;
+  toolsAvailable;
 
   constructor(map) {
     this.executor = new actionExecutor(this);
@@ -181,6 +237,7 @@ export default class Editor {
     this.redoables = [];
     this.map = map;
     this.selection = [];
+    this.toolsAvailable = [];
   }
 
   undo() {
@@ -196,7 +253,7 @@ export default class Editor {
       actions: undo.actions
         .slice(0)
         .reverse()
-        .map(({ action, data }) => this.executor[action](data, true))
+        .map(({ action, data }) => this.executor[action](data, true)),
     });
 
     if (undo.rebuildPaths) {
@@ -215,7 +272,7 @@ export default class Editor {
       label: redo.label,
       actions: redo.actions.map(({ action, data }) =>
         this.executor[action](data, false)
-      )
+      ),
     });
 
     if (redo.rebuildPaths) {
@@ -228,6 +285,8 @@ export default class Editor {
       return false;
     }
 
+    this.updateAvilableTools();
+
     if (action.rebuildPaths) {
       this.map.buildPaths();
     }
@@ -237,6 +296,50 @@ export default class Editor {
       this.actions.splice(0, 1);
     }
     return true;
+  }
+
+  updateAvilableTools() {
+    this.toolsAvailable = [];
+    if (this.selection.length) {
+      let wpts = [];
+      this.selection.forEach((item) => {
+        if (item.waypoint) {
+          wpts.push(item.waypoint);
+        }
+        if (item.path) {
+          let pathwpts = item.path.wpts.slice(0);
+          if (item.reverse) {
+            pathwpts.reverse();
+          }
+          pathwpts.forEach((wpt) => {
+            wpts.push(wpt);
+          });
+        }
+      });
+
+      if (wpts.length > 1) {
+        this.toolsAvailable.push({
+          icon: "settings_ethernet",
+          label: "Align waypoints",
+          description:
+            "Align " +
+            wpts.length +
+            " wpts in selection along a line from # " +
+            wpts[0].index +
+            " to #" +
+            wpts.slice(-1)[0].index,
+          action: "alignWpts",
+          data: { wpts },
+        });
+      }
+    }
+  }
+
+  toolAction({ action, data, label }) {
+    this.doneaction({
+      label,
+      actions: [this.executor[action](data)],
+    });
   }
 
   keyUp(event) {
@@ -255,7 +358,7 @@ export default class Editor {
 
       let actions = [this.executor.selectionReplace([])];
 
-      toDelete.forEach(item => {
+      toDelete.forEach((item) => {
         if (item && item.waypoint) {
           actions.push(this.executor.removeWaypoint(item.waypoint));
         }
@@ -264,7 +367,7 @@ export default class Editor {
       action = {
         label: "Remove selected items",
         actions,
-        rebuildPaths: true
+        rebuildPaths: true,
       };
     }
 
@@ -274,7 +377,7 @@ export default class Editor {
   wptDragged({ waypoint, dragstart }) {
     this.doneaction({
       label: "Move Waypont # " + waypoint.index,
-      actions: [this.executor.movedWaypoint({ waypoint, dragstart })]
+      actions: [this.executor.movedWaypoint({ waypoint, dragstart })],
     });
   }
   mapClick({ event, svgpoint }) {
@@ -289,7 +392,7 @@ export default class Editor {
     ) {
       action = {
         label: "Empty selection",
-        actions: [this.executor.selectionReplace([])]
+        actions: [this.executor.selectionReplace([])],
       };
     }
 
@@ -320,59 +423,116 @@ export default class Editor {
           this.executor.addWaypoint({
             x: +svgpoint.x.toFixed(3),
             y: +y.toFixed(3),
-            z: +svgpoint.y.toFixed(3)
-          })
-        ]
+            z: +svgpoint.y.toFixed(3),
+          }),
+        ],
       };
     }
 
     this.doneaction(action);
   }
 
-  wptClick({ event, waypoint }) {
-    let item = {
-      waypoint: waypoint
+  mouseReplaceSelectionAction(event, item) {
+    if (
+      !(
+        (!this.selection.length || !event.ctrlKey) &&
+        !event.shiftKey &&
+        !event.altKey
+      )
+    ) {
+      return;
+    }
+    let type;
+    let index;
+
+    if (item.waypoint) {
+      type = "waypoint";
+      index = item.waypoint.index;
+    } else if (item.path) {
+      type = "path";
+      index = item.path.index;
+    }
+
+    return {
+      label: "Set " + type + " # " + index + " as selection",
+      actions: [this.executor.selectionReplace([item])],
     };
+  }
+
+  mouseAddToSelectionAction(event, item) {
+    if (
+      !(
+        this.selection.length &&
+        event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey
+      )
+    ) {
+      return;
+    }
+
+    let type;
+    let index;
+
+    if (item.waypoint) {
+      type = "waypoint";
+      index = item.waypoint.index;
+    } else if (item.path) {
+      type = "path";
+      index = item.path.index;
+    }
 
     let action;
 
-    if (
-      this.selection.length &&
-      event.ctrlKey &&
-      !event.shiftKey &&
-      !event.altKey
-    ) {
-      let selectionIndex = this.selection.findIndex(
-        selection => selection.waypoint === waypoint
-      );
-      if (selectionIndex !== -1) {
-        if (this.selection.length === 1) {
-          action = {
-            label: "Empty selection",
-            actions: [this.executor.selectionReplace([])]
-          };
-        } else {
-          action = {
-            label: "Remove waypoint # " + waypoint.index + " from selection",
-            actions: [this.executor.selectionRemoveAtIndex(selectionIndex)]
-          };
-        }
+    let selectionIndex = this.selection.findIndex(
+      (selection) =>
+        (item.waypoint && selection.waypoint === item.waypoint) ||
+        (item.path && selection.path === item.path)
+    );
+    if (selectionIndex !== -1) {
+      if (this.selection.length === 1) {
+        action = {
+          label: "Empty selection",
+          actions: [this.executor.selectionReplace([])],
+        };
       } else {
         action = {
-          label: "Add waypoint # " + waypoint.index + " to selection",
-          actions: [this.executor.selectionAdd(item)]
+          label: "Remove " + type + " # " + index + " from selection",
+          actions: [this.executor.selectionRemoveAtIndex(selectionIndex)],
         };
       }
-    } else if (
-      (!this.selection.length || !event.ctrlKey) &&
-      !event.shiftKey &&
-      !event.altKey
-    ) {
+    } else {
       action = {
-        label: "Set waypoint # " + waypoint.index + " as selection",
-        actions: [this.executor.selectionReplace([item])]
+        label: "Add " + type + " # " + index + " to selection",
+        actions: [this.executor.selectionAdd(item)],
       };
-    } else if (
+    }
+    return action;
+  }
+
+  selectionMouseActions(event, item) {
+    let action = this.mouseAddToSelectionAction(event, item);
+    if (!action) {
+      action = this.mouseReplaceSelectionAction(event, item);
+    }
+    return action;
+  }
+
+  pathClick({ event, path }) {
+    let item = { path };
+
+    let action = this.selectionMouseActions(event, item);
+
+    this.doneaction(action);
+  }
+
+  wptClick({ event, waypoint }) {
+    let item = { waypoint };
+
+    let action = this.selectionMouseActions(event, item);
+
+    if (
+      !action &&
       this.selection.length === 1 &&
       this.selection.slice(0)[0].waypoint &&
       this.selection.slice(0)[0].waypoint.index !== waypoint.index &&
@@ -383,9 +543,9 @@ export default class Editor {
       action = {
         label: "Toggle Link # " + origin.index + " -> # " + waypoint.index,
         actions: [
-          this.executor.linkWayPointsToggle([origin, waypoint, event.altKey])
+          this.executor.linkWayPointsToggle([origin, waypoint, event.altKey]),
         ],
-        rebuildPaths: true
+        rebuildPaths: true,
       };
     }
 

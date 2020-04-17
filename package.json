@@ -10,6 +10,7 @@
   "dependencies": {
     "core-js": "^3.6.4",
     "hammerjs": "^2.0.8",
+    "material-icons": "^0.3.1",
     "svg-pan-zoom": "^3.6.1",
     "typeface-roboto": "^0.0.75",
     "vue": "^2.6.11",

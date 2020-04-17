@@ -44,7 +44,7 @@
           </text>
         </g>
 
-        <g class="links">
+        <g class="paths">
           <defs>
             <marker
               id="arrow"
@@ -61,7 +61,10 @@
           <g v-for="(path, index) in drawnPaths" :key="index">
             <title v-if="debug">path # {{ index }}</title>
             <path
-              class="link"
+              @click="
+                $emit('path-click', { event: $event, path: path.original })
+              "
+              class="path"
               :class="
                 path.bidirectional
                   ? 'bidirectional'
@@ -77,7 +80,7 @@
             <path
               v-for="path in pathsInEditing"
               :key="path.sindex"
-              class="link"
+              class="path"
               :d="path.d"
             />
           </g>
@@ -105,7 +108,10 @@
                     " @ " +
                     waypoint.x.toFixed(3) +
                     ", " +
-                    waypoint.z.toFixed(3)
+                    waypoint.z.toFixed(3) +
+                    " (" +
+                    waypoint.y.toFixed(3) +
+                    ")"
                   : ""
               }}
             </title>
@@ -120,8 +126,8 @@
                   draggable:
                     wptDragging &&
                     wptDragging.dragged &&
-                    wptDragging.waypoint === waypoint
-                }
+                    wptDragging.waypoint === waypoint,
+                },
               ]"
               :cx="waypoint.x"
               :cy="waypoint.z"
@@ -131,6 +137,13 @@
         </g>
 
         <g class="selection">
+          <path
+            v-for="(path, selIndex) in selectedPaths"
+            :key="selIndex"
+            class="path"
+            :d="path.d"
+          />
+
           <circle
             class="waypoint"
             v-for="(waypoint, selIndex) in selectedWpts"
@@ -141,7 +154,7 @@
               first: editor.selection.length > 1 && selIndex === 0,
               last:
                 editor.selection.length > 1 &&
-                selIndex === editor.selection.length - 1
+                selIndex === editor.selection.length - 1,
             }"
             :cx="waypoint.x"
             :cy="waypoint.z"
@@ -177,11 +190,11 @@ export default {
     debug: true,
     leftclicking: null,
     mouse: null,
-    wptDragging: false
+    wptDragging: false,
   }),
   props: {
     editor: Object,
-    mapImageURL: String
+    mapImageURL: String,
   },
   computed: {
     distance() {
@@ -193,9 +206,18 @@ export default {
       }
       return null;
     },
+    selectedPaths() {
+      return this.editor.selection
+        .filter((item) => item && item.path)
+        .map(({ path }) => {
+          return {
+            d: this.pathDef(path.wpts),
+          };
+        });
+    },
     selectedWpts() {
       return this.editor.selection
-        .filter(item => item && item.waypoint)
+        .filter((item) => item && item.waypoint)
         .map(({ waypoint }) => waypoint);
     },
     pathsInEditing() {
@@ -211,7 +233,7 @@ export default {
       return null;
     },
     drawnPaths() {
-      return this.editor.map.paths.map(path => {
+      return this.editor.map.paths.map((path) => {
         let reduced = this.reducePath(path.wpts);
 
         let dpath = Object.fromEntries(Object.entries(path));
@@ -221,6 +243,7 @@ export default {
         dpath.segments = path.wpts.length - 1;
         dpath.reducedsegments = reduced.length - 1;
         dpath.d = this.pathDef(reduced);
+        dpath.original = path;
 
         return dpath;
       });
@@ -230,12 +253,12 @@ export default {
         (segments, path) => {
           return {
             total: segments.total + path.segments,
-            reduced: segments.reduced + path.reducedsegments
+            reduced: segments.reduced + path.reducedsegments,
           };
         },
         {
           total: 0,
-          reduced: 0
+          reduced: 0,
         }
       );
     },
@@ -244,13 +267,13 @@ export default {
         [-this.editor.map.size / 2, -this.editor.map.size / 2].join(","),
         [this.editor.map.size / 2, -this.editor.map.size / 2].join(","),
         [this.editor.map.size / 2, this.editor.map.size / 2].join(","),
-        [-this.editor.map.size / 2, this.editor.map.size / 2].join(",")
+        [-this.editor.map.size / 2, this.editor.map.size / 2].join(","),
       ].join(" ");
-    }
+    },
   },
   methods: {
     pathDef(wpts) {
-      return "M" + wpts.map(wpt => [wpt.x, wpt.z].join(",")).join(" L");
+      return "M" + wpts.map((wpt) => [wpt.x, wpt.z].join(",")).join(" L");
     },
     mapMouseMove(event) {
       this.mouse = this.mouseEventMapCoords(event);
@@ -275,7 +298,7 @@ export default {
           this.wptDragging = {
             waypoint,
             dragstart: { x: waypoint.x, z: waypoint.z },
-            dragged: false
+            dragged: false,
           };
         }
 
@@ -311,7 +334,7 @@ export default {
         if (this.leftclicking) {
           this.$emit("map-click", {
             event,
-            svgpoint: this.mouseEventMapCoords(event)
+            svgpoint: this.mouseEventMapCoords(event),
           });
         }
       }
@@ -356,7 +379,7 @@ export default {
 
         return reduced;
       }, []);
-    }
+    },
   },
   beforeDestroy: function() {
     window.removeEventListener("resize", this.windowResize);
@@ -365,7 +388,7 @@ export default {
   mounted() {
     this.handler = new svghandling(this.$refs.svgMap);
     window.addEventListener("resize", this.windowResize);
-  }
+  },
 };
 </script>
 
@@ -415,7 +438,7 @@ export default {
   stroke-width: 0.2;
 }
 
-.links .link {
+.paths .path {
   fill: none;
   stroke-linecap: round;
   stroke: rgb(75, 255, 75);
@@ -423,34 +446,41 @@ export default {
   stroke-width: 1.5;
 }
 
-.links .editing .link {
+.paths .editing .path {
   stroke: rgb(97, 68, 14);
   stroke-opacity: 1;
   stroke-width: 0.4;
 }
 
-.links .link:hover {
+.paths .path:hover {
   stroke-opacity: 1;
 }
 
-.links .link.bidirectional {
+.paths .path.bidirectional {
   stroke: rgb(251, 47, 251);
 }
 
-.links .link.reverse {
+.paths .path.reverse {
   stroke: rgb(47, 251, 251);
 }
 
-.links .link.unidirectional,
-.links .link.reverse {
+.paths .path.unidirectional,
+.paths .path.reverse {
   marker-mid: url(#arrow);
   marker-start: url(#arrow);
 }
 
-.links .links marker path {
+.paths marker path {
   stroke-width: 0.1;
   stroke: rgb(6, 77, 6);
   fill: transparent;
+}
+
+.selection .path {
+  fill: none;
+  stroke-linecap: round;
+  stroke: rgb(9, 0, 139);
+  stroke-width: 0.3;
 }
 
 .selection .waypoint {

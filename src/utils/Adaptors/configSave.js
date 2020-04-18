@@ -147,6 +147,6 @@ export default class parser {
     });
     let content = builder.buildObject(this.xml);
 
-    console.debug(content);
+    console.log(content);
   }
 }

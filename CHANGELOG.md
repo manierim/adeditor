@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.5-PRE3
+ci: use marvinpinto/action-automatic-releases
+
 ## v0.0.5-ALPHA2
 [DEV] changelog parsing
 

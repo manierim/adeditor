@@ -17,6 +17,7 @@ jobs:
         uses: Roang-zero1/github-create-release-action@master
         with:
           prerelease_regex: "(RC|ALPHA|BETA)"
+          changelog_file: "CHANGELOG.md"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

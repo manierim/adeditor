@@ -15,7 +15,7 @@ Online publishing is meant for _testing only_.
 * "Path" concept: the system identifies all the links sequences between "crossings" (nodes) allowing more "natural" operations on them, i.e.:
 
   - [x] alignment,
-  - [ ] TODO: link type toggling for the entire path.
+  - [x] link type toggling for the entire path.
 
 * "standard" config.xml files (from gamesave folder) and routesManager route .xml files (from the autoDrive\routesManager\routes folder) for both
 

@@ -219,6 +219,93 @@ class actionExecutor {
       data,
     };
   }
+
+  togglePathLinkType({ path, option, original }) {
+    if (!original) {
+      let checkedOption = false;
+      if (!option) {
+        return;
+      }
+      if (
+        (option === "oneWay" && path.bidirectional) ||
+        ((option === "twoWay" || option === "switchDirection") &&
+          !path.bidirectional &&
+          !path.reverse) ||
+        (option === "toggleReverse" && !path.bidirectional)
+      ) {
+        checkedOption = true;
+      }
+
+      if (!checkedOption) {
+        return;
+      }
+
+      let original = path.wpts.map((wpt) => {
+        return {
+          wpt,
+          ins: wpt.ins.slice(0),
+          outs: wpt.outs.slice(0),
+        };
+      });
+
+      let prevWpt;
+
+      path.wpts.forEach((wpt) => {
+        if (prevWpt) {
+          if (option === "oneWay") {
+            prevWpt.ins.splice(prevWpt.ins.indexOf(wpt.index), 1);
+            wpt.outs.splice(wpt.outs.indexOf(prevWpt.index), 1);
+          }
+          if (option === "twoWay" || option === "switchDirection") {
+            prevWpt.ins.push(wpt.index);
+            wpt.outs.push(prevWpt.index);
+          }
+          if (option === "switchDirection") {
+            prevWpt.outs.splice(prevWpt.outs.indexOf(wpt.index), 1);
+            wpt.ins.splice(wpt.ins.indexOf(prevWpt.index), 1);
+          }
+
+          if (option === "toggleReverse") {
+            let insIndex = wpt.ins.indexOf(prevWpt.index);
+            if (insIndex === -1) {
+              wpt.ins.push(prevWpt.index);
+            } else {
+              wpt.ins.splice(insIndex, 1);
+            }
+          }
+        }
+
+        prevWpt = wpt;
+      });
+
+      return {
+        action: "togglePathLinkType",
+        data: {
+          original,
+        },
+      };
+    }
+
+    let prevOriginal = original.map(({ wpt }) => {
+      return {
+        wpt,
+        ins: wpt.ins.slice(0),
+        outs: wpt.outs.slice(0),
+      };
+    });
+
+    original.forEach((wdata) => {
+      wdata.wpt.ins = wdata.ins;
+      wdata.wpt.outs = wdata.outs;
+    });
+
+    return {
+      action: "togglePathLinkType",
+      data: {
+        original: prevOriginal,
+      },
+    };
+  }
 }
 
 export default class Editor {
@@ -255,8 +342,9 @@ export default class Editor {
     });
 
     if (undo.rebuildPaths) {
-      this.map.buildPaths();
+      this.mapRebuildPaths();
     }
+    this.updateAvilableTools();
   }
 
   redo() {
@@ -274,34 +362,43 @@ export default class Editor {
     });
 
     if (redo.rebuildPaths) {
-      this.map.buildPaths();
+      this.mapRebuildPaths();
     }
+    this.updateAvilableTools();
+  }
+
+  mapRebuildPaths() {
+    this.selection = this.selection.filter(({ path }) => !path);
+    this.map.buildPaths();
   }
 
   doneaction(action) {
     if (!action) {
       return false;
     }
+    this.actions.push(action);
+    this.redoables = [];
+
+    if (action.rebuildPaths) {
+      this.mapRebuildPaths();
+    }
 
     this.updateAvilableTools();
 
-    if (action.rebuildPaths) {
-      this.map.buildPaths();
-    }
-    this.redoables = [];
-    this.actions.push(action);
     return true;
   }
 
   updateAvilableTools() {
     this.toolsAvailable = [];
     if (this.selection.length) {
+      let paths = [];
       let wpts = [];
       this.selection.forEach((item) => {
         if (item.waypoint) {
           wpts.push(item.waypoint);
         }
         if (item.path) {
+          paths.push(item.path);
           let pathwpts = item.path.wpts.slice(0);
           if (item.reverse) {
             pathwpts.reverse();
@@ -327,14 +424,84 @@ export default class Editor {
           data: { wpts },
         });
       }
+
+      if (paths.length === 1 && this.selection.length === 1) {
+        let path = paths[0];
+
+        let options = [];
+
+        if (path.bidirectional) {
+          options.push({
+            label: "One way",
+            value: "oneWay",
+            icon: "arrow_right_alt",
+          });
+        }
+
+        if (!path.bidirectional) {
+          if (!path.reverse) {
+            options.push({
+              label: "Bidirectional",
+              value: "twoWay",
+              icon: "compare_arrows",
+            });
+
+            options.push({
+              label: "Opposite direction",
+              value: "switchDirection",
+              icon: "cached",
+            });
+          }
+
+          options.push({
+            label: (path.reverse ? "Forward" : "Reverse") + " driving",
+            value: "toggleReverse",
+            icon: "swap_horizontal_circle",
+          });
+        }
+
+        let icon = "timeline";
+        let description =
+          "Change all links in path # " + paths[0].index + " to ";
+        let option;
+
+        if (options.length === 1) {
+          icon = options[0].icon;
+          description += options[0].label;
+          option = options[0].value;
+          options = null;
+        } else {
+          description += " selected type";
+        }
+
+        this.toolsAvailable.push({
+          icon,
+          label: "Change path type",
+          description,
+          action: "togglePathLinkType",
+          options,
+          data: {
+            path,
+            option,
+          },
+          rebuildPaths: true,
+        });
+      }
     }
   }
 
-  toolAction({ action, data, label }) {
-    this.doneaction({
-      label,
-      actions: [this.executor[action](data)],
-    });
+  toolAction({ action, data, label, rebuildPaths }, option) {
+    if (option && option.value !== undefined) {
+      data.option = option.value;
+    }
+    let doneAction = this.executor[action](data);
+    if (doneAction) {
+      this.doneaction({
+        label,
+        actions: [doneAction],
+        rebuildPaths,
+      });
+    }
   }
 
   keyUp(event) {

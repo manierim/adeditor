@@ -65,19 +65,47 @@
             v-for="toolInstance in editor.toolsAvailable"
             :key="toolInstance.action"
             class="flex flex-col self-stretch"
+            :class="{ dropdown: toolInstance.options }"
           >
             <button
-              @click="toolAction(toolInstance)"
-              class="inline-flex items-center items-stretch bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+              @click="
+                if (!toolInstance.options) {
+                  toolAction(toolInstance);
+                }
+              "
+              class="inline-flex items-stretch bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded"
             >
               <span
-                class="material-icons fill-current mt-.5 w-4 h-4 mr-3"
+                class="material-icons fill-current mr-1"
                 v-text="toolInstance.icon"
               />
-              <span v-text="toolInstance.label">Download</span>
+              <span v-text="toolInstance.label" />
+              <span v-if="toolInstance.options">🠋</span>
             </button>
+            <ul
+              v-if="toolInstance.options"
+              class="flex flex-col self-stretch dropdown-content absolute hidden text-gray-800 pt-1 mt-8"
+            >
+              <li
+                class="flex block self-stretch"
+                v-for="option in toolInstance.options"
+                :key="option.value"
+              >
+                <button
+                  @click="toolAction(toolInstance, option)"
+                  class="flex w-full items-stretch bg-gray-300 hover:bg-gray-400 p-1 whitespace-no-wrap"
+                >
+                  <span
+                    class="material-icons fill-current mr-1"
+                    v-text="option.icon"
+                  />
+                  <span v-text="option.label" />
+                </button>
+              </li>
+            </ul>
 
             <div
+              v-if="toolInstance.description"
               class="flex italic text-xs"
               v-text="toolInstance.description"
             ></div>
@@ -229,8 +257,8 @@ export default {
     redo() {
       this.editor.redo();
     },
-    toolAction(toolInstance) {
-      this.editor.toolAction(toolInstance);
+    toolAction(toolInstance, option) {
+      this.editor.toolAction(toolInstance, option);
     },
     mapClick({ event, svgpoint }) {
       this.editor.mapClick({ event, svgpoint });
@@ -248,12 +276,15 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 input[type="number"] {
   text-align: center;
 }
 
 #mapsize {
   width: 5em;
+}
+.dropdown:hover > .dropdown-content {
+  display: block;
 }
 </style>

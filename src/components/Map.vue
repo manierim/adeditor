@@ -138,6 +138,7 @@
 
         <g class="selection">
           <path
+            @mouseup="wptMouseBtn({ event: $event })"
             v-for="(path, selIndex) in selectedPaths"
             :key="selIndex"
             class="path"
@@ -287,16 +288,24 @@ export default {
         }
 
         if (this.wptDragging.dragged) {
-          this.wptDragging.waypoint.x = +this.mouse.x.toFixed(3);
-          this.wptDragging.waypoint.z = +this.mouse.y.toFixed(3);
+          this.wptDragging.waypoint.x = +(
+            this.mouse.x - this.wptDragging.offset.x
+          ).toFixed(3);
+          this.wptDragging.waypoint.z = +(
+            this.mouse.y - this.wptDragging.offset.y
+          ).toFixed(3);
         }
       }
     },
     wptMouseBtn({ event, waypoint }) {
       if (event.button === 0) {
-        if (event.type === "mousedown") {
+        if (event.type === "mousedown" && waypoint) {
           this.wptDragging = {
             waypoint,
+            offset: {
+              x: this.mouse.x - waypoint.x,
+              y: this.mouse.y - waypoint.z,
+            },
             dragstart: { x: waypoint.x, z: waypoint.z },
             dragged: false,
           };
@@ -305,7 +314,7 @@ export default {
         if (this.wptDragging && event.type === "mouseup") {
           if (this.wptDragging.dragged) {
             this.$emit("wpt-dragged", this.wptDragging);
-          } else {
+          } else if (waypoint) {
             this.$emit("wpt-click", { event, waypoint });
           }
           this.wptDragging = false;

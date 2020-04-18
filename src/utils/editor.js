@@ -117,34 +117,41 @@ class actionExecutor {
     };
   }
 
-  alignWpts({ wpts, movedWpts }, reverse) {
+  alignWpts({ wpts, start, end, movedWpts }, reverse) {
     if (wpts && !reverse) {
-      let start = wpts[0];
-      let end = wpts.slice(-1)[0];
-
       let movedWpts = [];
 
-      wpts.slice(1, -1).forEach((wpt) => {
-        let newPos = closestPointToLine(wpt, start, end);
-        if (newPos) {
-          newPos.x = +newPos.x.toFixed(3);
-          newPos.z = +newPos.z.toFixed(3);
-          if (newPos.x !== wpt.x || newPos.z !== wpt.z) {
-            movedWpts.push({
-              wpt,
-              original: {
-                x: wpt.x,
-                z: wpt.z,
-              },
-            });
-
-            wpt.x = newPos.x;
-            wpt.z = newPos.z;
-          }
+      wpts.forEach((wpt) => {
+        if (wpt === start || wpt === end) {
+          return;
         }
+        let newPos = closestPointToLine(wpt, start, end);
+        if (!newPos) {
+          return;
+        }
+        newPos.x = +newPos.x.toFixed(3);
+        newPos.z = +newPos.z.toFixed(3);
+        if (newPos.x === wpt.x && newPos.z === wpt.z) {
+          return;
+        }
+
+        movedWpts.push({
+          wpt,
+          original: {
+            x: wpt.x,
+            z: wpt.z,
+          },
+        });
+
+        wpt.x = newPos.x;
+        wpt.z = newPos.z;
       });
 
       if (movedWpts.length) {
+        this.editor.lastAlignment = {
+          start,
+          end,
+        };
         return {
           action: "alignWpts",
           data: { movedWpts },
@@ -398,19 +405,78 @@ export default class Editor {
     this.toolsAvailable = [];
     let { wpts, paths } = this.selectionWaypointsAndPaths();
 
+    let alignOptions = [];
+
     if (wpts.length > 2) {
-      this.toolsAvailable.push({
-        icon: "settings_ethernet",
-        label: "Align waypoints",
-        description:
+      alignOptions.push({
+        label: "Selection 1st and last",
+        data: {
+          start: wpts[0],
+          end: wpts.slice(-1)[0],
+          wpts: wpts.slice(1, -1),
+        },
+        title:
           "Align " +
           wpts.length +
           " wpts in selection along a line from # " +
           wpts[0].index +
           " to #" +
           wpts.slice(-1)[0].index,
+      });
+    }
+
+    if (
+      wpts.length &&
+      this.lastAlignment &&
+      this.lastAlignment.start !== wpts[0] &&
+      this.lastAlignment.end !== wpts[0] &&
+      this.lastAlignment.start !== wpts.slice(-1)[0] &&
+      this.lastAlignment.end !== wpts.slice(-1)[0]
+    ) {
+      let alignable = wpts.filter(
+        (w) =>
+          w.index !== this.lastAlignment.start.index &&
+          w.index !== this.lastAlignment.end.index
+      );
+
+      if (alignable.length) {
+        alignOptions.push({
+          label: "Prev. 1st and last",
+          data: {
+            start: this.lastAlignment.start,
+            end: this.lastAlignment.end,
+            wpts,
+          },
+          title:
+            "Align " +
+            wpts.length +
+            " wpts in selection along a line from # " +
+            this.lastAlignment.start.index +
+            " to #" +
+            this.lastAlignment.end.index,
+        });
+      }
+    }
+
+    if (alignOptions.length) {
+      let description;
+      let data;
+      let options;
+
+      if (alignOptions.length === 1) {
+        description = alignOptions[0].title;
+        data = alignOptions[0].data;
+      } else {
+        options = alignOptions;
+      }
+
+      this.toolsAvailable.push({
+        icon: "settings_ethernet",
+        label: "Align waypoints",
+        description,
         action: "alignWpts",
-        data: { wpts },
+        data,
+        options,
       });
     }
 
@@ -478,8 +544,13 @@ export default class Editor {
   }
 
   toolAction({ action, data, label, rebuildPaths }, option) {
-    if (option && option.value !== undefined) {
-      data.option = option.value;
+    if (option) {
+      if (option.data !== undefined) {
+        data = option.data;
+      }
+      if (option.value !== undefined) {
+        data.option = option.value;
+      }
     }
     let doneAction = this.executor[action](data);
     if (doneAction) {

@@ -111,7 +111,12 @@
                     waypoint.z.toFixed(3) +
                     " (" +
                     waypoint.y.toFixed(3) +
-                    ")"
+                    ")" +
+                    "\nPaths:\n" +
+                    waypoint
+                      .paths()
+                      .map((p) => "# " + p.index)
+                      .join("\n")
                   : ""
               }}
             </title>

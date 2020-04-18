@@ -64,7 +64,7 @@
           <div
             v-for="toolInstance in editor.toolsAvailable"
             :key="toolInstance.action"
-            class="flex flex-col self-stretch"
+            class="flex flex-col self-stretch mb-1"
             :class="{ dropdown: toolInstance.options }"
           >
             <button
@@ -89,13 +89,15 @@
               <li
                 class="flex block self-stretch"
                 v-for="option in toolInstance.options"
-                :key="option.value"
+                :key="option.index"
               >
                 <button
                   @click="toolAction(toolInstance, option)"
                   class="flex w-full items-stretch bg-gray-300 hover:bg-gray-400 p-1 whitespace-no-wrap"
+                  :title="option.title"
                 >
                   <span
+                    v-if="option.icon"
                     class="material-icons fill-current mr-1"
                     v-text="option.icon"
                   />

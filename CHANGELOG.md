@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.5-ALPHA2
+[DEV] changelog parsing
+
 ## v0.0.5-ALPHA
 [ADDED] Waypoint aligment between prev. used first and last
 [IMPROVEMENT] in Alignment check if waypoint needs to be moved

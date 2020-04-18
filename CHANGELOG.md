@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2-ALPHA2
+
+trigger build
+
 ## v0.0.2-ALPHA
 
 [ADDED] Type toggling for selected paths

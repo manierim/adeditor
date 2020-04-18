@@ -58,6 +58,14 @@ Online publishing is meant for _testing only_.
   - [x] between first and last waypoint in selection
   - [ ] TODO: between last used first and last;
 
+- [ ] TODO: Clone selection and:
+  - move,
+  - rotate,
+  - stretch,
+  - confirm;
+
+- [ ] TODO: Markers and folders management
+
 - [x] Unlimited Undo/Redo levels (if not by browser memory restrictions)
 
 - [ ] TODO: online/contextual help, documentation

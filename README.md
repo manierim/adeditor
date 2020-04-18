@@ -55,7 +55,7 @@ Online publishing is meant for _testing only_.
 
 * Alignment of waypoints in current selection:
   - [x] between first and last waypoint in selection
-  - [x] TODO: between last used first and last;
+  - [x] between last used first and last;
 
 - [ ] TODO: Clone selection and:
   - move,

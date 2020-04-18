@@ -32,11 +32,11 @@ export default class Map {
         id = parseInt(parsed.id[index]);
       }
 
-      let linkedArray = list =>
+      let linkedArray = (list) =>
         list
           .split(",")
-          .map(linkedStr => parseInt(linkedStr))
-          .filter(linkedId => linkedId > 0);
+          .map((linkedStr) => parseInt(linkedStr))
+          .filter((linkedId) => linkedId > 0);
 
       let wpt = new Waypoint(
         this,
@@ -61,7 +61,7 @@ export default class Map {
 
     this.size = size;
 
-    parsed.markers.forEach(marker => {
+    parsed.markers.forEach((marker) => {
       this.waypoints[marker.index].marker = marker;
     });
 
@@ -91,36 +91,45 @@ export default class Map {
     return waypoint;
   }
   removeWaypoint(index) {
+    if (!this.waypoints[index]) {
+      return;
+    }
     Vue.delete(this.waypoints, index);
+    return true;
   }
 
   waypointsArray() {
-    return Object.entries(this.waypoints).map(kv => kv[1]);
+    return Object.entries(this.waypoints).map((kv) => kv[1]);
   }
 
   markers() {
     return this.waypointsArray()
-      .filter(wpt => wpt.marker)
-      .map(wpt => {
+      .filter((wpt) => wpt.marker)
+      .map((wpt) => {
         wpt.marker.wpt = wpt;
         return wpt.marker;
       });
   }
 
   save() {
-    let content = this.parser.getContentForSave(this.waypointsArray(), this.markers());
+    let content = this.parser.getContentForSave(
+      this.waypointsArray(),
+      this.markers()
+    );
 
-    var element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
-    element.setAttribute('download', this.parser.fileName);
-  
-    element.style.display = 'none';
+    var element = document.createElement("a");
+    element.setAttribute(
+      "href",
+      "data:text/plain;charset=utf-8," + encodeURIComponent(content)
+    );
+    element.setAttribute("download", this.parser.fileName);
+
+    element.style.display = "none";
     document.body.appendChild(element);
-  
+
     element.click();
-  
+
     document.body.removeChild(element);
-  
   }
 
   buildPaths() {
@@ -135,15 +144,15 @@ export default class Map {
     let BidirectionalInitialWaypointsDone = [];
     let doneNodes = [];
 
-    let buildPathsForNode = node => {
+    let buildPathsForNode = (node) => {
       if (doneNodes.indexOf(node.index) !== -1) {
         return;
       }
       doneNodes.push(node.index);
 
-      ["bidirectional", "out", "reverse-out"].forEach(linkType => {
+      ["bidirectional", "out", "reverse-out"].forEach((linkType) => {
         // build paths from this node
-        node.linksofType(linkType).forEach(linkedNodeIndex => {
+        node.linksofType(linkType).forEach((linkedNodeIndex) => {
           if (
             linkType === "bidirectional" &&
             BidirectionalInitialWaypointsDone.indexOf(linkedNodeIndex) !== -1
@@ -171,7 +180,7 @@ export default class Map {
 
             let nextWptIndex = linkedNode
               .linkedWpts()
-              .filter(id => id !== wpts.slice(-2, -1)[0].index)[0];
+              .filter((id) => id !== wpts.slice(-2, -1)[0].index)[0];
 
             linkedNode = this.waypoints[nextWptIndex];
 
@@ -191,10 +200,10 @@ export default class Map {
             index: paths.length,
             bidirectional: linkType === "bidirectional",
             reverse: linkType === "reverse-out",
-            wpts: wpts
+            wpts: wpts,
           };
 
-          wpts.forEach(wptInPath => {
+          wpts.forEach((wptInPath) => {
             wptInPath.addPath(path);
           });
 
@@ -205,7 +214,7 @@ export default class Map {
 
     let donePathWaypoints = [];
 
-    this.waypointsArray().forEach(wpt => {
+    this.waypointsArray().forEach((wpt) => {
       if (
         !wpt.linkedWpts().length ||
         donePathWaypoints.indexOf(wpt.index) !== -1

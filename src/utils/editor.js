@@ -31,7 +31,9 @@ class actionExecutor {
   }
   removeWaypoint(data, reverse) {
     if (!reverse) {
-      this.editor.map.removeWaypoint(data.index);
+      if (!this.editor.map.removeWaypoint(data.index)) {
+        return;
+      }
 
       return {
         action: "removeWaypoint",
@@ -504,25 +506,53 @@ export default class Editor {
     }
   }
 
-  keyUp(event) {
-    let action;
-
-    if (
+  deleteKeyAction(event) {
+    return (
       event.code === "Delete" &&
       !event.ctrlKey &&
       !event.shiftKey &&
       !event.altKey &&
       !event.metaKey &&
-      !event.repeat &&
-      this.selection.length
-    ) {
-      let toDelete = this.selection.slice(0);
+      !event.repeat
+    );
+  }
+
+  selectionWaypoints() {
+    let wpts = [];
+    this.selection.forEach((item) => {
+      if (
+        item &&
+        item.waypoint &&
+        !wpts.find((w) => w.index === item.waypoint.index)
+      ) {
+        wpts.push(item.waypoint);
+      }
+      if (item && item.path) {
+        item.path.wpts.forEach((wpt) => {
+          if (!wpts.find((w) => w.index === wpt.index)) {
+            wpts.push(wpt);
+          }
+        });
+      }
+    });
+    return wpts;
+  }
+
+  keyUp(event) {
+    let action;
+
+    if (this.deleteKeyAction(event)) {
+      let selectedWpts = this.selectionWaypoints();
+      if (!selectedWpts.length) {
+        return;
+      }
 
       let actions = [this.executor.selectionReplace([])];
 
-      toDelete.forEach((item) => {
-        if (item && item.waypoint) {
-          actions.push(this.executor.removeWaypoint(item.waypoint));
+      selectedWpts.forEach((wpt) => {
+        let done = this.executor.removeWaypoint(wpt);
+        if (done) {
+          actions.push(done);
         }
       });
 

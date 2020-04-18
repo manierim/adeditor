@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.2-ALPHA
+
+[ADDED] Type toggling for selected paths
+[FIX] waypont dragging broken if a path is selected
+[DEV] save uses console.log instead on console.debug
+
 ## v0.0.1-ALPHA
 
 Initial Release

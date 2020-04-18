@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.0.5-PRE4
+## v0.0.5-PRE5
 ci: use marvinpinto/action-automatic-releases
 
 ## v0.0.5-ALPHA2

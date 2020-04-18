@@ -392,103 +392,84 @@ export default class Editor {
 
   updateAvilableTools() {
     this.toolsAvailable = [];
-    if (this.selection.length) {
-      let paths = [];
-      let wpts = [];
-      this.selection.forEach((item) => {
-        if (item.waypoint) {
-          wpts.push(item.waypoint);
-        }
-        if (item.path) {
-          paths.push(item.path);
-          let pathwpts = item.path.wpts.slice(0);
-          if (item.reverse) {
-            pathwpts.reverse();
-          }
-          pathwpts.forEach((wpt) => {
-            wpts.push(wpt);
-          });
-        }
+    let { wpts, paths } = this.selectionWaypointsAndPaths();
+
+    if (wpts.length > 2) {
+      this.toolsAvailable.push({
+        icon: "settings_ethernet",
+        label: "Align waypoints",
+        description:
+          "Align " +
+          wpts.length +
+          " wpts in selection along a line from # " +
+          wpts[0].index +
+          " to #" +
+          wpts.slice(-1)[0].index,
+        action: "alignWpts",
+        data: { wpts },
       });
+    }
 
-      if (wpts.length > 2) {
-        this.toolsAvailable.push({
-          icon: "settings_ethernet",
-          label: "Align waypoints",
-          description:
-            "Align " +
-            wpts.length +
-            " wpts in selection along a line from # " +
-            wpts[0].index +
-            " to #" +
-            wpts.slice(-1)[0].index,
-          action: "alignWpts",
-          data: { wpts },
+    if (paths.length === 1 && this.selection.length === 1) {
+      let path = paths[0];
+
+      let options = [];
+
+      if (path.bidirectional) {
+        options.push({
+          label: "One way",
+          value: "oneWay",
+          icon: "arrow_right_alt",
         });
       }
 
-      if (paths.length === 1 && this.selection.length === 1) {
-        let path = paths[0];
-
-        let options = [];
-
-        if (path.bidirectional) {
+      if (!path.bidirectional) {
+        if (!path.reverse) {
           options.push({
-            label: "One way",
-            value: "oneWay",
-            icon: "arrow_right_alt",
+            label: "Bidirectional",
+            value: "twoWay",
+            icon: "compare_arrows",
+          });
+
+          options.push({
+            label: "Opposite direction",
+            value: "switchDirection",
+            icon: "cached",
           });
         }
 
-        if (!path.bidirectional) {
-          if (!path.reverse) {
-            options.push({
-              label: "Bidirectional",
-              value: "twoWay",
-              icon: "compare_arrows",
-            });
-
-            options.push({
-              label: "Opposite direction",
-              value: "switchDirection",
-              icon: "cached",
-            });
-          }
-
-          options.push({
-            label: (path.reverse ? "Forward" : "Reverse") + " driving",
-            value: "toggleReverse",
-            icon: "swap_horizontal_circle",
-          });
-        }
-
-        let icon = "timeline";
-        let description =
-          "Change all links in path # " + paths[0].index + " to ";
-        let option;
-
-        if (options.length === 1) {
-          icon = options[0].icon;
-          description += options[0].label;
-          option = options[0].value;
-          options = null;
-        } else {
-          description += " selected type";
-        }
-
-        this.toolsAvailable.push({
-          icon,
-          label: "Change path type",
-          description,
-          action: "togglePathLinkType",
-          options,
-          data: {
-            path,
-            option,
-          },
-          rebuildPaths: true,
+        options.push({
+          label: (path.reverse ? "Forward" : "Reverse") + " driving",
+          value: "toggleReverse",
+          icon: "swap_horizontal_circle",
         });
       }
+
+      let icon = "timeline";
+      let description = "Change all links in path # " + paths[0].index + " to ";
+      let option;
+
+      if (options.length === 1) {
+        icon = options[0].icon;
+        description += options[0].label;
+        option = options[0].value;
+        options = null;
+      } else {
+        description += " selected type";
+      }
+
+      this.toolsAvailable.push({
+        icon,
+        label: "Change path type",
+        description,
+        action: "togglePathLinkType",
+        options,
+        data: {
+          path,
+          option,
+        },
+        rebuildPaths: true,
+      });
     }
   }
 
@@ -517,8 +498,9 @@ export default class Editor {
     );
   }
 
-  selectionWaypoints() {
+  selectionWaypointsAndPaths() {
     let wpts = [];
+    let paths = [];
     this.selection.forEach((item) => {
       if (
         item &&
@@ -528,28 +510,31 @@ export default class Editor {
         wpts.push(item.waypoint);
       }
       if (item && item.path) {
-        item.path.wpts.forEach((wpt) => {
-          if (!wpts.find((w) => w.index === wpt.index)) {
-            wpts.push(wpt);
-          }
-        });
+        if (!paths.find((p) => p.index === item.path.index)) {
+          paths.push(item.path);
+          item.path.wpts.forEach((wpt) => {
+            if (!wpts.find((w) => w.index === wpt.index)) {
+              wpts.push(wpt);
+            }
+          });
+        }
       }
     });
-    return wpts;
+    return { wpts, paths };
   }
 
   keyUp(event) {
     let action;
 
     if (this.deleteKeyAction(event)) {
-      let selectedWpts = this.selectionWaypoints();
-      if (!selectedWpts.length) {
+      let { wpts } = this.selectionWaypointsAndPaths();
+      if (!wpts.length) {
         return;
       }
 
       let actions = [this.executor.selectionReplace([])];
 
-      selectedWpts.forEach((wpt) => {
+      wpts.forEach((wpt) => {
         let done = this.executor.removeWaypoint(wpt);
         if (done) {
           actions.push(done);

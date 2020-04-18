@@ -1,7 +1,5 @@
 import { closestPointToLine } from "./math";
 
-const maxUndos = 50;
-
 class actionExecutor {
   editor;
 
@@ -292,9 +290,6 @@ export default class Editor {
     }
     this.redoables = [];
     this.actions.push(action);
-    if (this.actions.length > maxUndos) {
-      this.actions.splice(0, 1);
-    }
     return true;
   }
 
@@ -317,7 +312,7 @@ export default class Editor {
         }
       });
 
-      if (wpts.length > 1) {
+      if (wpts.length > 2) {
         this.toolsAvailable.push({
           icon: "settings_ethernet",
           label: "Align waypoints",

@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.3-ALPHA
+[ADDED] Download file on save
+
 ## v0.0.2-ALPHA2
 
 trigger build

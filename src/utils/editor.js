@@ -127,16 +127,20 @@ class actionExecutor {
       wpts.slice(1, -1).forEach((wpt) => {
         let newPos = closestPointToLine(wpt, start, end);
         if (newPos) {
-          movedWpts.push({
-            wpt,
-            original: {
-              x: wpt.x,
-              z: wpt.z,
-            },
-          });
+          newPos.x = +newPos.x.toFixed(3);
+          newPos.z = +newPos.z.toFixed(3);
+          if (newPos.x !== wpt.x || newPos.z !== wpt.z) {
+            movedWpts.push({
+              wpt,
+              original: {
+                x: wpt.x,
+                z: wpt.z,
+              },
+            });
 
-          wpt.x = newPos.x;
-          wpt.z = newPos.z;
+            wpt.x = newPos.x;
+            wpt.z = newPos.z;
+          }
         }
       });
 

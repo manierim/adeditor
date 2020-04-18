@@ -177,6 +177,17 @@
           </div>
         </Card>
       </template>
+      <Card>
+        <div class="text-xs">
+          For info and help see
+          <a
+            class="font-semibold text-gray-700 underline hover:text-gray-800 hover:no-underline"
+            href="https://github.com/manierim/adeditor#main-features"
+            target="_blank"
+            >readme on GitHub</a
+          >
+        </div>
+      </Card>
     </div>
     <Map
       @map-click="mapClick"

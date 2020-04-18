@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.4-ALPHA
+[UI] added reference to readme for info
+
 ## v0.0.3-ALPHA
 [ADDED] Download file on save
 

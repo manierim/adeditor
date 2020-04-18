@@ -1,6 +1,7 @@
 <template>
   <div class="border border-gray-400 rounded shadow-md p-2 flex flex-col">
     <div
+      v-if="hasTitle"
       class="shadow-inner bg-gray-100 rounded flex mb-2"
       :class="{ collapsable }"
       @click="
@@ -35,6 +36,11 @@ export default {
     return {
       collapsed: false,
     };
+  },
+  computed: {
+    hasTitle() {
+      return !!this.$slots.title;
+    },
   },
 };
 </script>

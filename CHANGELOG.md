@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.5-ALPHA
+[ADDED] Waypoint aligment between prev. used first and last
+[IMPROVEMENT] in Alignment check if waypoint needs to be moved
+[FIX] DEL also deletes waypoints in selected paths
+[DEV] editor selection wpts and paths refactoring
+
 ## v0.0.4-ALPHA
 [UI] added reference to readme for info
 

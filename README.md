@@ -17,10 +17,9 @@ Online publishing is meant for _testing only_.
   - [x] alignment,
   - [x] link type toggling for the entire path.
 
-* "standard" config.xml files (from gamesave folder) and routesManager route .xml files (from the autoDrive\routesManager\routes folder) for both
-
-  - [x] reading
-  - [ ] TODO: and saving _(currently the file content is only logged to the javascript dev console of the browser)_
+* Reads and saves XML route file formats:
+  - "standard" config.xml files (from gamesave folder);
+  - "routesManager" route.xml files (from the autoDrive\routesManager\routes folder)
 
 * Map size:
 

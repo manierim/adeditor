@@ -7,7 +7,7 @@ export default class parser {
     this.fileName = fileName;
   }
 
-  async write(wptsArray, markers) {
+  getContentForSave(wptsArray, markers) {
     let wptsRoot = this.xml.routeExport.waypoints[0];
 
     let indexMap = wptsArray.map(wpt => parseInt(wpt.index));
@@ -64,9 +64,9 @@ export default class parser {
     let builder = new xml2js.Builder({
       headless: true
     });
-    let content = builder.buildObject(this.xml);
 
-    console.log(content);
+    return builder.buildObject(this.xml);
+
   }
 
   parse() {

@@ -96,7 +96,7 @@ export default class parser {
     return response;
   }
 
-  async write(wptsArray, markers) {
+  getContentForSave(wptsArray, markers) {
     let wptsRoot = this.xml.AutoDrive[this.mapname][0].waypoints[0];
 
     let indexMap = wptsArray.map(wpt => parseInt(wpt.index));
@@ -145,8 +145,8 @@ export default class parser {
         standalone: false
       }
     });
-    let content = builder.buildObject(this.xml);
+    
+    return builder.buildObject(this.xml);
 
-    console.log(content);
   }
 }

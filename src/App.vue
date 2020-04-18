@@ -243,7 +243,7 @@ export default {
       if (!this.editor || !this.editor.map) {
         return;
       }
-      await this.editor.map.save();
+      this.editor.map.save();
     },
     mapLoaded(response) {
       this.error = response.error;

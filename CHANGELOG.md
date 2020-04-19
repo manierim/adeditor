@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.6fix-PRE
+fix(ui): :bug: CTRL+S not preventing browser default action
+
 ## v0.0.6-PRE
 feat(selection): ✨ highlight selected item on map when mouse is over item in selection list
 feat(alignment): ✨ highlight aligment line on map when mouse is over tool button

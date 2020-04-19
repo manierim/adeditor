@@ -277,7 +277,7 @@ export default {
   },
 
   mounted() {
-    window.addEventListener("keyup", (event) => {
+    window.addEventListener("keydown", (event) => {
       if (this.editor && this.editor.keyUp(event)) {
         event.preventDefault();
       }

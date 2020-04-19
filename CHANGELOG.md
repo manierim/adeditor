@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.0.6fix-PRE
+## v0.0.7-PRE
 fix(ui): :bug: CTRL+S not preventing browser default action
 
 ## v0.0.6-PRE

@@ -666,8 +666,6 @@ export default class Editor {
       }
     }
 
-    console.debug(event);
-
     return this.doneaction(action);
   }
 

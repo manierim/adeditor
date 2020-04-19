@@ -12,21 +12,22 @@ Online publishing is meant for _testing only_.
 
 ## Main Features (implemented/planned)
 
-* "Path" concept: the system identifies all the links sequences between "crossings" (nodes) allowing more "natural" operations on them, i.e.:
+- "Path" concept: the system identifies all the links sequences between "crossings" (nodes) allowing more "natural" operations on them, i.e.:
 
   - [x] alignment,
   - [x] link type toggling for the entire path.
 
-* Reads and saves XML route file formats:
+- Reads and saves XML route file formats:
+
   - [x] "standard" config.xml files (from gamesave folder);
   - [x] "routesManager" route.xml files (from the autoDrive\routesManager\routes folder)
 
-* Map size:
+- Map size:
 
   - [x] is autodetected from the route when possible;
   - [x] can be changed at any time to any value;
 
-* Map image
+- Map image
 
   - [x] is always scaled correctly to map size
         _(no issues with 2048x2048 PDA map images in 4x or 8x maps)_;
@@ -34,15 +35,15 @@ Online publishing is meant for _testing only_.
     - [ ] TODO: DDS _(directly from map .zip file)_;
     - [x] PNG _(converted from DDS with tools like [Paint.net](https://www.getpaint.net/))_;
 
-* Manage items on map with mouse clicks + key modifiers (no need to "switch tool"):
+- Manage items on map with mouse clicks + key modifiers (no need to "switch tool"):
 
   - [x] Select (click),
   - [x] move waypoint (click & drag),
   - [x] create waypoint (ctrl + click)
   - [x] link waypoints
-  (click to select origin, shift + click on target, + alt for toggling reverse driving).
+        (click to select origin, shift + click on target, + alt for toggling reverse driving).
 
-* Waypoint and Path selection:
+- Waypoint and Path selection:
 
   - [x] new selection (click);
   - [x] add/remove to selection (ctrl + click);
@@ -52,37 +53,43 @@ Online publishing is meant for _testing only_.
   - [ ] TODO: hide / show only selection;
   - [ ] TODO: select all unconnected waypoints _(for quick delete)_;
   - [ ] TODO: select all paths & their waypoints inside a region (left click & drag, + ctrl to add to selection);
-  - [ ] TODO: Clone selection and:
-    - move,
-    - rotate,
-    - stretch,
-    - confirm;
 
-* Alignment of waypoints in current selection:
+- Alignment of waypoints in current selection:
+
   - [x] between first and last waypoint in selection
   - [x] between last used first and last;
+
+- [ ] TODO: Clone selection and:
+
+  - move,
+  - rotate,
+  - stretch,
+  - confirm;
 
 - [ ] TODO: Markers and folders management
 
 - [x] Unlimited Undo/Redo levels (if not by browser memory restrictions)
 
 - [ ] TODO: online/contextual help, documentation
-      *(currently this document is the only source of information)*
+      _(currently this document is the only source of information)_
 
 ## Known Issues / Limitations
 
 ### Slow/sluggish pan of the map
+
 Currently, the entire map is always rendered as a single pannable/zoomable SVG.
 When the number of rendered links is above a few hundreds the browser starts to struggle.
 
 A possible solution might be to only render the currently visible portion and/or dynamically reduce the LOD basing on zoom factor; alternatively also switch to canvas rendering.
 
 ### Slow update after waypoints or links creation/deletion
+
 This is probably due to the current relationship between Vue.js observables and map entities.
 
 A possible solution could be to make Vue.js observables "more static", and selectively update them basing on the exact type of operation performed on map entities.
 
 ### Upload / Download of single files
+
 Being a web page the editor has no direct access to the user filesystem for quick read / save operations and folder navigation. Everything must be uploaded or downloaded.
 
 This also limits the level of integration with AD Route Manager (cannot directly create a new entry in the routes.xml "index") and with the game itself (i.e. direct access to the map zip file to extract the PDA map image)

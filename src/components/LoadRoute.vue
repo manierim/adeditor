@@ -17,22 +17,41 @@
       </template>
     </div>
     <div class="flex flex-col">
-      <span class="flex text-xs">Image</span>
+      <p class="flex text-xs">
+        <span>Image</span>
+        <span class="italic ml-1">(.dds from map or converted .png)</span>
+      </p>
       <input class="flex text-xs" @change="getImage" type="file" />
+      <template v-if="savePng">
+        <a
+          class="w-full border shadow text-center text-xs my-1"
+          :download="saveName.substring(0, saveName.length - 4) + '.png'"
+          :href="savePng"
+        >
+          Download PNG
+        </a>
+        <p class="flex text-xs italic">
+          Conversion from DDS requires time. It is suggested to downnoald the
+          converted PNG image and use it in future.
+        </p>
+      </template>
     </div>
   </div>
 </template>
 
 <script>
 import { mapFromXMLFile } from "../utils/routeparser";
+const dds = () => import("../utils/dds.js");
 
 export default {
   name: "LoadRoute",
   data: () => ({
-    loading: false
+    loading: false,
+    savePng: null,
+    saveName: null,
   }),
   props: {
-    cansave: Boolean
+    cansave: Boolean,
   },
   methods: {
     loadingStatus(loading) {
@@ -42,13 +61,31 @@ export default {
       this.loading = loading;
       this.$emit("loading-status", loading);
     },
-    getImage(event) {
-      if (event.target.files[0].type !== "image/png") {
-        return;
+    async getImage(event) {
+      let mapImageURL;
+
+      if (event.target.files[0].type === "image/vnd.ms-dds") {
+        let reader = new FileReader();
+
+        reader.onload = async (e) => {
+          const { createObjectURLFromDDS } = await dds();
+          let url = await createObjectURLFromDDS(e.target.result);
+          if (url) {
+            this.savePng = url;
+            this.saveName = event.target.files[0].name;
+            this.$emit("map-image-change", url);
+          }
+        };
+
+        reader.readAsArrayBuffer(event.target.files[0]);
       }
-      let mapImageURL = URL.createObjectURL(event.target.files[0]);
-      if (mapImageURL) {
-        this.$emit("map-image-change", mapImageURL);
+
+      if (event.target.files[0].type === "image/png") {
+        mapImageURL = URL.createObjectURL(event.target.files[0]);
+        if (mapImageURL) {
+          this.savePng = null;
+          this.$emit("map-image-change", mapImageURL);
+        }
       }
     },
     getFile(event) {
@@ -56,7 +93,7 @@ export default {
       let selectedFile = event.target.files[0];
       let reader = new FileReader();
 
-      reader.onload = async e => {
+      reader.onload = async (e) => {
         this.loadingStatus(false);
         this.$emit(
           "map-xml-loaded",
@@ -64,8 +101,8 @@ export default {
         );
       };
       reader.readAsText(selectedFile);
-    }
-  }
+    },
+  },
 };
 </script>
 

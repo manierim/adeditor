@@ -4,7 +4,7 @@ An online editor for [FS19_AutoDrive](https://github.com/Stephan-S/FS19_AutoDriv
 
 ## ALFA Version
 
-The project is currently in early - prototyping - stage.
+The project is currently in an early - prototyping - stage.
 
 [Online release](http://manierim.github.io/adeditor/) is meant for _testing only_.
 
@@ -80,7 +80,7 @@ The project is currently in early - prototyping - stage.
 Currently, the entire map is always rendered as a single pannable/zoomable SVG.
 When the number of rendered links is above a few hundreds the browser starts to struggle.
 
-A possible solution might be to only render the currently visible portion and/or dynamically reduce the LOD basing on zoom factor; alternatively also switch to canvas rendering.
+A possible solution might be to only render the currently visible portion and/or dynamically reduce the LOD basing on the zoom factor; alternatively also switch to canvas rendering.
 
 ### Slow update after links creation/deletion
 

@@ -2,6 +2,7 @@
 
 ## v0.0.6-PRE
 feat(selection): ✨ highlight selected item on map when mouse is over item in selection list
+feat(alignment): ✨ highlight aligment line on map when mouse is over tool button
 
 ## v0.0.5-PRE5
 ci: use marvinpinto/action-automatic-releases

@@ -165,6 +165,12 @@
             :r="waypoint.marker ? 1.4 : waypoint.isNode() ? 0.7 : 0.5"
           ></circle>
         </g>
+
+        <g v-if="editor.preview" class="preview">
+          <template v-if="this.editor.preview.line">
+            <path class="line" :d="pathDef(this.editor.preview.line)" />
+          </template>
+        </g>
       </g>
     </svg>
 
@@ -503,6 +509,13 @@ export default {
   stroke: rgb(212, 0, 219);
   stroke-width: 0.5;
 }
+
+.preview .line {
+  fill: none;
+  stroke: rgb(212, 0, 219);
+  stroke-width: 0.2;
+}
+
 .selection .waypoint.single {
   stroke: rgb(12, 255, 24);
 }

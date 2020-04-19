@@ -117,7 +117,18 @@ class actionExecutor {
     };
   }
 
-  alignWpts({ wpts, start, end, movedWpts }, reverse) {
+  alignWpts({ wpts, start, end, movedWpts, highlightEventType }, reverse) {
+    if (highlightEventType) {
+      if (highlightEventType === "mouseenter") {
+        this.editor.preview = {
+          line: [start, end],
+        };
+      }
+      if (highlightEventType === "mouseleave") {
+        this.editor.preview = null;
+      }
+      return;
+    }
     if (wpts && !reverse) {
       let movedWpts = [];
 
@@ -233,7 +244,10 @@ class actionExecutor {
     };
   }
 
-  togglePathLinkType({ path, option, original }) {
+  togglePathLinkType({ path, option, original, highlightEventType }) {
+    if (highlightEventType) {
+      return;
+    }
     if (!original) {
       let checkedOption = false;
       if (!option) {
@@ -328,6 +342,7 @@ export default class Editor {
   map;
   selection;
   toolsAvailable;
+  preview;
 
   constructor(map) {
     this.executor = new actionExecutor(this);
@@ -336,6 +351,7 @@ export default class Editor {
     this.map = map;
     this.selection = [];
     this.toolsAvailable = [];
+    this.preview = null;
   }
 
   undo() {
@@ -543,7 +559,7 @@ export default class Editor {
     }
   }
 
-  toolAction({ action, data, label, rebuildPaths }, option) {
+  toolAction({ action, data, label, rebuildPaths }, option, highlightEventType) {
     if (option) {
       if (option.data !== undefined) {
         data = option.data;
@@ -552,6 +568,8 @@ export default class Editor {
         data.option = option.value;
       }
     }
+    data.highlightEventType = highlightEventType;
+
     let doneAction = this.executor[action](data);
     if (doneAction) {
       this.doneaction({

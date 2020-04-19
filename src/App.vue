@@ -75,6 +75,16 @@
             :class="{ dropdown: toolInstance.options }"
           >
             <button
+              @mouseenter="
+                if (!toolInstance.options) {
+                  mouseOver('toolInstance', $event, { toolInstance });
+                }
+              "
+              @mouseleave="
+                if (!toolInstance.options) {
+                  mouseOver('toolInstance', $event, { toolInstance });
+                }
+              "
               @click="
                 if (!toolInstance.options) {
                   toolAction(toolInstance);
@@ -99,6 +109,12 @@
                 :key="option.index"
               >
                 <button
+                  @mouseenter="
+                    mouseOver('toolInstance', $event, { toolInstance, option })
+                  "
+                  @mouseleave="
+                    mouseOver('toolInstance', $event, { toolInstance, option })
+                  "
                   @click="toolAction(toolInstance, option)"
                   class="flex w-full items-stretch bg-gray-300 hover:bg-gray-400 p-1 whitespace-no-wrap"
                   :title="option.title"
@@ -303,7 +319,6 @@ export default {
       this.editor.wptDragged(event);
     },
     mouseOver(elementType, event, data) {
-
       if (elementType === "selection") {
         let { selIndex } = data;
 
@@ -314,6 +329,13 @@ export default {
         if (event.type === "mouseleave") {
           this.highlight.selection = null;
         }
+        return;
+      }
+
+      if (elementType === "toolInstance") {
+        let { toolInstance, option } = data;
+        this.editor.toolAction(toolInstance, option, event.type);
+        return;
       }
     },
   },

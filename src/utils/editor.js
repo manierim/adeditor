@@ -244,7 +244,7 @@ class actionExecutor {
     };
   }
 
-  togglePathLinkType({ path, option, original, highlightEventType }) {
+  toggleBranchLinkType({ branch, option, original, highlightEventType }) {
     if (highlightEventType) {
       return;
     }
@@ -254,11 +254,11 @@ class actionExecutor {
         return;
       }
       if (
-        (option === "oneWay" && path.bidirectional) ||
+        (option === "oneWay" && branch.bidirectional) ||
         ((option === "twoWay" || option === "switchDirection") &&
-          !path.bidirectional &&
-          !path.reverse) ||
-        (option === "toggleReverse" && !path.bidirectional)
+          !branch.bidirectional &&
+          !branch.reverse) ||
+        (option === "toggleReverse" && !branch.bidirectional)
       ) {
         checkedOption = true;
       }
@@ -267,7 +267,7 @@ class actionExecutor {
         return;
       }
 
-      let original = path.wpts.map((wpt) => {
+      let original = branch.wpts.map((wpt) => {
         return {
           wpt,
           ins: wpt.ins.slice(0),
@@ -277,7 +277,7 @@ class actionExecutor {
 
       let prevWpt;
 
-      path.wpts.forEach((wpt) => {
+      branch.wpts.forEach((wpt) => {
         if (prevWpt) {
           if (option === "oneWay") {
             prevWpt.ins.splice(prevWpt.ins.indexOf(wpt.index), 1);
@@ -306,7 +306,7 @@ class actionExecutor {
       });
 
       return {
-        action: "togglePathLinkType",
+        action: "toggleBranchLinkType",
         data: {
           original,
         },
@@ -327,7 +327,7 @@ class actionExecutor {
     });
 
     return {
-      action: "togglePathLinkType",
+      action: "toggleBranchLinkType",
       data: {
         original: prevOriginal,
       },
@@ -362,7 +362,7 @@ export default class Editor {
     let undo = this.actions.pop();
 
     this.redoables.push({
-      rebuildPaths: undo.rebuildPaths,
+      rebuildBranches: undo.rebuildBranches,
       label: undo.label,
       actions: undo.actions
         .slice(0)
@@ -370,8 +370,8 @@ export default class Editor {
         .map(({ action, data }) => this.executor[action](data, true)),
     });
 
-    if (undo.rebuildPaths) {
-      this.mapRebuildPaths();
+    if (undo.rebuildBranches) {
+      this.mapRebuildBranches();
     }
     this.updateAvilableTools();
   }
@@ -383,22 +383,22 @@ export default class Editor {
     let redo = this.redoables.pop();
 
     this.actions.push({
-      rebuildPaths: redo.rebuildPaths,
+      rebuildBranches: redo.rebuildBranches,
       label: redo.label,
       actions: redo.actions.map(({ action, data }) =>
         this.executor[action](data, false)
       ),
     });
 
-    if (redo.rebuildPaths) {
-      this.mapRebuildPaths();
+    if (redo.rebuildBranches) {
+      this.mapRebuildBranches();
     }
     this.updateAvilableTools();
   }
 
-  mapRebuildPaths() {
-    this.selection = this.selection.filter(({ path }) => !path);
-    this.map.buildPaths();
+  mapRebuildBranches() {
+    this.selection = this.selection.filter(({ branch }) => !branch);
+    this.map.buildBranches();
   }
 
   doneaction(action) {
@@ -408,8 +408,8 @@ export default class Editor {
     this.actions.push(action);
     this.redoables = [];
 
-    if (action.rebuildPaths) {
-      this.mapRebuildPaths();
+    if (action.rebuildBranches) {
+      this.mapRebuildBranches();
     }
 
     this.updateAvilableTools();
@@ -419,7 +419,7 @@ export default class Editor {
 
   updateAvilableTools() {
     this.toolsAvailable = [];
-    let { wpts, paths } = this.selectionWaypointsAndPaths();
+    let { wpts, branches } = this.selectionWaypointsAndBranches();
 
     let alignOptions = [];
 
@@ -496,12 +496,12 @@ export default class Editor {
       });
     }
 
-    if (paths.length === 1 && this.selection.length === 1) {
-      let path = paths[0];
+    if (branches.length === 1 && this.selection.length === 1) {
+      let branch = branches[0];
 
       let options = [];
 
-      if (path.bidirectional) {
+      if (branch.bidirectional) {
         options.push({
           label: "One way",
           value: "oneWay",
@@ -509,8 +509,8 @@ export default class Editor {
         });
       }
 
-      if (!path.bidirectional) {
-        if (!path.reverse) {
+      if (!branch.bidirectional) {
+        if (!branch.reverse) {
           options.push({
             label: "Bidirectional",
             value: "twoWay",
@@ -525,14 +525,14 @@ export default class Editor {
         }
 
         options.push({
-          label: (path.reverse ? "Forward" : "Reverse") + " driving",
+          label: (branch.reverse ? "Forward" : "Reverse") + " driving",
           value: "toggleReverse",
           icon: "swap_horizontal_circle",
         });
       }
 
       let icon = "timeline";
-      let description = "Change all links in path # " + paths[0].index + " to ";
+      let description = "Change all links in branch # " + branches[0].index + " to ";
       let option;
 
       if (options.length === 1) {
@@ -546,21 +546,21 @@ export default class Editor {
 
       this.toolsAvailable.push({
         icon,
-        label: "Change path type",
+        label: "Change branch type",
         description,
-        action: "togglePathLinkType",
+        action: "toggleBranchLinkType",
         options,
         data: {
-          path,
+          branch,
           option,
         },
-        rebuildPaths: true,
+        rebuildBranches: true,
       });
     }
   }
 
   toolAction(
-    { action, data, label, rebuildPaths },
+    { action, data, label, rebuildBranches },
     option,
     highlightEventType
   ) {
@@ -579,14 +579,14 @@ export default class Editor {
       this.doneaction({
         label,
         actions: [doneAction],
-        rebuildPaths,
+        rebuildBranches,
       });
     }
   }
 
-  selectionWaypointsAndPaths() {
+  selectionWaypointsAndBranches() {
     let wpts = [];
-    let paths = [];
+    let branches = [];
     this.selection.forEach((item) => {
       if (
         item &&
@@ -595,10 +595,10 @@ export default class Editor {
       ) {
         wpts.push(item.waypoint);
       }
-      if (item && item.path) {
-        if (!paths.find((p) => p.index === item.path.index)) {
-          paths.push(item.path);
-          item.path.wpts.forEach((wpt) => {
+      if (item && item.branch) {
+        if (!branches.find((p) => p.index === item.branch.index)) {
+          branches.push(item.branch);
+          item.branch.wpts.forEach((wpt) => {
             if (!wpts.find((w) => w.index === wpt.index)) {
               wpts.push(wpt);
             }
@@ -606,7 +606,7 @@ export default class Editor {
         }
       }
     });
-    return { wpts, paths };
+    return { wpts, branches };
   }
 
   deleteKeyAction(event) {
@@ -624,7 +624,7 @@ export default class Editor {
     let action;
 
     if (this.deleteKeyAction(event)) {
-      let { wpts } = this.selectionWaypointsAndPaths();
+      let { wpts } = this.selectionWaypointsAndBranches();
       if (!wpts.length) {
         return;
       }
@@ -641,7 +641,7 @@ export default class Editor {
       action = {
         label: "Remove selected items",
         actions,
-        rebuildPaths: true,
+        rebuildBranches: true,
       };
     }
 
@@ -743,9 +743,9 @@ export default class Editor {
     if (item.waypoint) {
       type = "waypoint";
       index = item.waypoint.index;
-    } else if (item.path) {
-      type = "path";
-      index = item.path.index;
+    } else if (item.branch) {
+      type = "branch";
+      index = item.branch.index;
     }
 
     return {
@@ -772,9 +772,9 @@ export default class Editor {
     if (item.waypoint) {
       type = "waypoint";
       index = item.waypoint.index;
-    } else if (item.path) {
-      type = "path";
-      index = item.path.index;
+    } else if (item.branch) {
+      type = "branch";
+      index = item.branch.index;
     }
 
     let action;
@@ -782,7 +782,7 @@ export default class Editor {
     let selectionIndex = this.selection.findIndex(
       (selection) =>
         (item.waypoint && selection.waypoint === item.waypoint) ||
-        (item.path && selection.path === item.path)
+        (item.branch && selection.branch === item.branch)
     );
     if (selectionIndex !== -1) {
       if (this.selection.length === 1) {
@@ -813,8 +813,8 @@ export default class Editor {
     return action;
   }
 
-  pathClick({ event, path }) {
-    let item = { path };
+  branchClick({ event, branch }) {
+    let item = { branch };
 
     let action = this.selectionMouseActions(event, item);
 
@@ -840,7 +840,7 @@ export default class Editor {
         actions: [
           this.executor.linkWayPointsToggle([origin, waypoint, event.altKey]),
         ],
-        rebuildPaths: true,
+        rebuildBranches: true,
       };
     }
 

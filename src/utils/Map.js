@@ -6,7 +6,7 @@ export default class Map {
   cache;
   waypoints;
   size;
-  paths;
+  branches;
   lastid;
 
   constructor(parser) {
@@ -65,7 +65,7 @@ export default class Map {
       this.waypoints[marker.index].marker = marker;
     });
 
-    this.buildPaths();
+    this.buildBranches();
   }
 
   addWaypoint({ waypoint, x, y, z }) {
@@ -132,26 +132,26 @@ export default class Map {
     document.body.removeChild(element);
   }
 
-  buildPaths() {
+  buildBranches() {
     if (!this.waypointsArray().length) {
-      this.paths = [];
+      this.branches = [];
       return;
     }
 
-    let paths = [];
+    let branches = [];
     this.cache = {};
 
     let BidirectionalInitialWaypointsDone = [];
     let doneNodes = [];
 
-    let buildPathsForNode = (node) => {
+    let buildBranchesForNode = (node) => {
       if (doneNodes.indexOf(node.index) !== -1) {
         return;
       }
       doneNodes.push(node.index);
 
       ["bidirectional", "out", "reverse-out"].forEach((linkType) => {
-        // build paths from this node
+        // build branches from this node
         node.linksofType(linkType).forEach((linkedNodeIndex) => {
           if (
             linkType === "bidirectional" &&
@@ -196,39 +196,39 @@ export default class Map {
             BidirectionalInitialWaypointsDone.push(prevwpt.index);
           }
 
-          let path = {
-            index: paths.length,
+          let branch = {
+            index: branches.length,
             bidirectional: linkType === "bidirectional",
             reverse: linkType === "reverse-out",
             wpts: wpts,
           };
 
-          wpts.forEach((wptInPath) => {
-            wptInPath.addPath(path);
+          wpts.forEach((wptInBranch) => {
+            wptInBranch.addBranch(branch);
           });
 
-          paths.push(path);
+          branches.push(branch);
         });
       });
     };
 
-    let donePathWaypoints = [];
+    let doneBranchWaypoints = [];
 
     this.waypointsArray().forEach((wpt) => {
       if (
         !wpt.linkedWpts().length ||
-        donePathWaypoints.indexOf(wpt.index) !== -1
+        doneBranchWaypoints.indexOf(wpt.index) !== -1
       ) {
         return;
       }
 
-      let pathNodes = [];
+      let branchNodes = [];
       let prev = null;
 
-      while (!wpt.isNode() && pathNodes.indexOf(wpt.index) === -1) {
-        donePathWaypoints.push(wpt.index);
+      while (!wpt.isNode() && branchNodes.indexOf(wpt.index) === -1) {
+        doneBranchWaypoints.push(wpt.index);
 
-        pathNodes.push(wpt.index);
+        branchNodes.push(wpt.index);
 
         let next = wpt.linkedWpts()[0];
 
@@ -239,9 +239,9 @@ export default class Map {
         wpt = this.waypoints[next];
       }
 
-      buildPathsForNode(wpt);
+      buildBranchesForNode(wpt);
     });
 
-    this.paths = paths;
+    this.branches = branches;
   }
 }

@@ -12,10 +12,10 @@ The project is currently in an early - prototyping - stage.
 
 ## Main Features
 
-- "Path" concept: the system identifies all the links sequences between "crossings" (nodes) allowing more "natural" operations on them, i.e.:
+- "Branch" concept: the system identifies all the links sequences between "crossings" (nodes) allowing more "natural" operations on them, i.e.:
 
   - [x] alignment,
-  - [x] link type toggling for the entire path.
+  - [x] link type toggling for the entire branch.
 
 - Reads and saves (ctrl + S) XML route file formats:
 
@@ -43,16 +43,16 @@ The project is currently in an early - prototyping - stage.
   - [x] link waypoints
         (click to select origin then shift + click on target; + alt for toggling reverse driving).
 
-- Waypoint and Path selection:
+- Waypoint and Branch selection:
 
   - [x] new selection (click);
   - [x] add/remove to selection (ctrl + click);
   - [x] delete waypoints in selection (del);
-  - [ ] TODO: expand selection of a Path into selection of all its waypoints;
+  - [ ] TODO: expand selection of a Branch into selection of all its waypoints;
   - [ ] TODO: changhe sorting of items in selection;
   - [ ] TODO: hide or only show selection;
   - [ ] TODO: select all unconnected waypoints _(for quick delete)_;
-  - [ ] TODO: select all paths & their waypoints inside a region (left click & drag, + ctrl to add to selection);
+  - [ ] TODO: select all branches & their waypoints inside a region (left click & drag, + ctrl to add to selection);
 
   - Alignment of waypoints in current selection:
 
@@ -84,7 +84,7 @@ A possible solution might be to only render the currently visible portion and/or
 
 ### Slow update after links creation/deletion
 
-This is probably due to the current relationship between Vue.js observables and map entities (waypoints and paths).
+This is probably due to the current relationship between Vue.js observables and map entities (waypoints and branches).
 
 A possible solution could be to make Vue.js observables "more static", and selectively update them basing on the exact type of operation performed on map entities.
 

@@ -51,10 +51,10 @@
                   class="ml-1 font-bold"
                 />
               </template>
-              <template v-if="item.path">
+              <template v-if="item.branch">
                 <span
-                  >Path # {{ item.path.index }} ({{
-                    item.path.wpts.length
+                  >Branch # {{ item.branch.index }} ({{
+                    item.branch.wpts.length
                   }}
                   wpts)</span
                 >
@@ -197,7 +197,7 @@
               Waypoints: {{ editor.map.waypointsArray().length }}
             </span>
             <span class="flex text-center">
-              Paths: {{ editor.map.paths.length }}
+              Branches: {{ editor.map.branches.length }}
             </span>
           </div>
         </Card>
@@ -216,7 +216,7 @@
     </div>
     <Map
       @map-click="mapClick"
-      @path-click="pathClick"
+      @branch-click="branchClick"
       @wpt-click="wptClick"
       @wpt-dragged="wptDragged"
       class="flex flex-grow border border-gray-400 rounded shadow-md m-2 ml-0 p-2"
@@ -309,8 +309,8 @@ export default {
     mapClick({ event, svgpoint }) {
       this.editor.mapClick({ event, svgpoint });
     },
-    pathClick(event) {
-      this.editor.pathClick(event);
+    branchClick(event) {
+      this.editor.branchClick(event);
     },
     wptClick(event) {
       this.editor.wptClick(event);

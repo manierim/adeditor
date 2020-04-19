@@ -182,13 +182,13 @@ export default class Waypoint {
     return linkedWpts;
   }
 
-  paths() {
-    return this.get("paths", []);
+  branches() {
+    return this.get("branches", []);
   }
 
-  addPath(path) {
-    let paths = this.get("paths", []);
-    paths.push(path);
-    this.set("paths", paths);
+  addBranch(branch) {
+    let branches = this.get("branches", []);
+    branches.push(branch);
+    this.set("branches", branches);
   }
 }

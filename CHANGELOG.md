@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.9-PRE
+chore: :speech_balloon: Terminology change from "path" to "branch"
+
 ## v0.0.8-PRE
 feat(io): :sparkles: Read DDS map images and convert to PNG
 
@@ -20,8 +23,8 @@ ci: use marvinpinto/action-automatic-releases
 ## v0.0.5-ALPHA
 [ADDED] Waypoint alignment between prev. used first and last
 [IMPROVEMENT] in Alignment check if waypoint needs to be moved
-[FIX] DEL also deletes waypoints in selected paths
-[DEV] editor selection waypoints and paths refactoring
+[FIX] DEL also deletes waypoints in selected branches
+[DEV] editor selection waypoints and branches refactoring
 
 ## v0.0.4-ALPHA
 [UI] added reference to README.md for info
@@ -35,8 +38,8 @@ trigger build
 
 ## v0.0.2-ALPHA
 
-[ADDED] Type toggling for selected paths
-[FIX] waypoint dragging broken if a path is selected
+[ADDED] Type toggling for selected branches
+[FIX] waypoint dragging broken if a branch is selected
 [DEV] save uses console.log instead on console.debug
 
 ## v0.0.1-ALPHA

@@ -44,7 +44,7 @@
           </text>
         </g>
 
-        <g class="paths">
+        <g class="branches">
           <defs>
             <marker
               id="arrow"
@@ -58,30 +58,30 @@
               <path d="M0,0 L.5,.25 L0,.5" />
             </marker>
           </defs>
-          <g v-for="(path, index) in drawnPaths" :key="index">
-            <title v-if="debug">path # {{ index }}</title>
+          <g v-for="(branch, index) in drawnBranches" :key="index">
+            <title v-if="debug">branch # {{ index }}</title>
             <path
               @click="
-                $emit('path-click', { event: $event, path: path.original })
+                $emit('branch-click', { event: $event, branch: branch.original })
               "
-              class="path"
+              class="branch"
               :class="
-                path.bidirectional
+                branch.bidirectional
                   ? 'bidirectional'
-                  : path.reverse
+                  : branch.reverse
                   ? 'reverse'
                   : 'unidirectional'
               "
-              :d="path.d"
+              :d="branch.d"
             />
           </g>
 
-          <g class="editing" v-if="pathsInEditing">
+          <g class="editing" v-if="branchsInEditing">
             <path
-              v-for="path in pathsInEditing"
-              :key="path.sindex"
-              class="path"
-              :d="path.d"
+              v-for="branch in branchsInEditing"
+              :key="branch.sindex"
+              class="branch"
+              :d="branch.d"
             />
           </g>
         </g>
@@ -112,9 +112,9 @@
                     " (" +
                     waypoint.y.toFixed(3) +
                     ")" +
-                    "\nPaths:\n" +
+                    "\nBranches:\n" +
                     waypoint
-                      .paths()
+                      .branches()
                       .map((p) => "# " + p.index)
                       .join("\n")
                   : ""
@@ -144,11 +144,11 @@
         <g class="selection">
           <path
             @mouseup="wptMouseBtn({ event: $event })"
-            v-for="({ path, highlight }, selIndex) in selectedPaths"
+            v-for="({ branch, highlight }, selIndex) in selectedBranches"
             :key="selIndex"
-            class="path"
+            class="branch"
             :class="{ highlight }"
-            :d="path.d"
+            :d="branch.d"
           />
 
           <circle
@@ -217,51 +217,51 @@ export default {
       }
       return null;
     },
-    selectedPaths() {
+    selectedBranches() {
       return this.selection
-        .filter((item) => item && item.path)
+        .filter((item) => item && item.branch)
         .map((item) => {
-          item.path.d = this.pathDef(item.path.wpts);
+          item.branch.d = this.pathDef(item.branch.wpts);
           return item;
         });
     },
     selectedWpts() {
       return this.selection.filter((item) => item && item.waypoint);
     },
-    pathsInEditing() {
+    branchsInEditing() {
       if (
         this.wptDragging &&
         this.wptDragging.dragged &&
         this.wptDragging.waypoint
       ) {
-        return this.wptDragging.waypoint.paths().map((p, index) => {
+        return this.wptDragging.waypoint.branches().map((p, index) => {
           return { index, d: this.pathDef(p.wpts) };
         });
       }
       return null;
     },
-    drawnPaths() {
-      return this.editor.map.paths.map((path) => {
-        let reduced = this.reducePath(path.wpts);
+    drawnBranches() {
+      return this.editor.map.branches.map((branch) => {
+        let reduced = this.reducePath(branch.wpts);
 
-        let dpath = Object.fromEntries(Object.entries(path));
+        let dbranch = Object.fromEntries(Object.entries(branch));
 
-        delete dpath.wpts;
+        delete dbranch.wpts;
 
-        dpath.segments = path.wpts.length - 1;
-        dpath.reducedsegments = reduced.length - 1;
-        dpath.d = this.pathDef(reduced);
-        dpath.original = path;
+        dbranch.segments = branch.wpts.length - 1;
+        dbranch.reducedsegments = reduced.length - 1;
+        dbranch.d = this.pathDef(reduced);
+        dbranch.original = branch;
 
-        return dpath;
+        return dbranch;
       });
     },
     segments() {
-      return this.drawnPaths.reduce(
-        (segments, path) => {
+      return this.drawnBranches.reduce(
+        (segments, branch) => {
           return {
-            total: segments.total + path.segments,
-            reduced: segments.reduced + path.reducedsegments,
+            total: segments.total + branch.segments,
+            reduced: segments.reduced + branch.reducedsegments,
           };
         },
         {
@@ -454,7 +454,7 @@ export default {
   stroke-width: 0.2;
 }
 
-.paths .path {
+.branches .branch {
   fill: none;
   stroke-linecap: round;
   stroke: rgb(75, 255, 75);
@@ -462,37 +462,37 @@ export default {
   stroke-width: 1.5;
 }
 
-.paths .editing .path {
+.branches .editing .branch {
   stroke: rgb(97, 68, 14);
   stroke-opacity: 1;
   stroke-width: 0.4;
 }
 
-.paths .path:hover {
+.branches .branch:hover {
   stroke-opacity: 1;
 }
 
-.paths .path.bidirectional {
+.branches .branch.bidirectional {
   stroke: rgb(251, 47, 251);
 }
 
-.paths .path.reverse {
+.branches .branch.reverse {
   stroke: rgb(47, 251, 251);
 }
 
-.paths .path.unidirectional,
-.paths .path.reverse {
+.branches .branch.unidirectional,
+.branches .branch.reverse {
   marker-mid: url(#arrow);
   marker-start: url(#arrow);
 }
 
-.paths marker path {
+.branches marker branch {
   stroke-width: 0.1;
   stroke: rgb(6, 77, 6);
   fill: transparent;
 }
 
-.selection .path {
+.selection .branch {
   fill: none;
   stroke-linecap: round;
   stroke: rgb(9, 0, 139);

@@ -48,20 +48,19 @@ Online publishing is meant for _testing only_.
   - [x] add/remove to selection (ctrl + click);
   - [x] delete waypoints in selection (del);
   - [ ] TODO: expand Path selection to its waypoints;
-  - [ ] TODO: select all paths & their waypoints inside a region (left click & drag, + ctrl to add to selection);
   - [ ] TODO: changhe order of items in selection;
   - [ ] TODO: hide / show only selection;
   - [ ] TODO: select all unconnected waypoints _(for quick delete)_;
+  - [ ] TODO: select all paths & their waypoints inside a region (left click & drag, + ctrl to add to selection);
+  - [ ] TODO: Clone selection and:
+    - move,
+    - rotate,
+    - stretch,
+    - confirm;
 
 * Alignment of waypoints in current selection:
   - [x] between first and last waypoint in selection
   - [x] between last used first and last;
-
-- [ ] TODO: Clone selection and:
-  - move,
-  - rotate,
-  - stretch,
-  - confirm;
 
 - [ ] TODO: Markers and folders management
 

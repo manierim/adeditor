@@ -144,23 +144,21 @@
         <g class="selection">
           <path
             @mouseup="wptMouseBtn({ event: $event })"
-            v-for="(path, selIndex) in selectedPaths"
+            v-for="({ path, highlight }, selIndex) in selectedPaths"
             :key="selIndex"
             class="path"
+            :class="{ highlight }"
             :d="path.d"
           />
 
           <circle
             class="waypoint"
-            v-for="(waypoint, selIndex) in selectedWpts"
+            v-for="{ waypoint, highlight } in selectedWpts"
             :key="waypoint.index"
             :class="{
+              highlight,
               single:
                 editor.selection.length === 1 && selectedWpts.length === 1,
-              first: editor.selection.length > 1 && selIndex === 0,
-              last:
-                editor.selection.length > 1 &&
-                selIndex === editor.selection.length - 1,
             }"
             :cx="waypoint.x"
             :cy="waypoint.z"
@@ -200,6 +198,7 @@ export default {
   }),
   props: {
     editor: Object,
+    selection: Array,
     mapImageURL: String,
   },
   computed: {
@@ -213,18 +212,15 @@ export default {
       return null;
     },
     selectedPaths() {
-      return this.editor.selection
+      return this.selection
         .filter((item) => item && item.path)
-        .map(({ path }) => {
-          return {
-            d: this.pathDef(path.wpts),
-          };
+        .map((item) => {
+          item.path.d = this.pathDef(item.path.wpts);
+          return item;
         });
     },
     selectedWpts() {
-      return this.editor.selection
-        .filter((item) => item && item.waypoint)
-        .map(({ waypoint }) => waypoint);
+      return this.selection.filter((item) => item && item.waypoint);
     },
     pathsInEditing() {
       if (
@@ -502,14 +498,12 @@ export default {
   stroke-width: 0.3;
   stroke: rgb(9, 0, 139);
 }
+
+.selection .highlight {
+  stroke: rgb(212, 0, 219);
+  stroke-width: 0.5;
+}
 .selection .waypoint.single {
   stroke: rgb(12, 255, 24);
-}
-
-.selection .waypoint.first {
-  stroke: rgb(12, 255, 243);
-}
-.selection .waypoint.last {
-  stroke: rgb(12, 109, 255);
 }
 </style>

@@ -33,8 +33,15 @@
           </template>
           <ul>
             <li
+              class="hover:bg-pink-300"
               v-for="(item, index) in editor.selection.filter((item) => item)"
               :key="index"
+              @mouseenter="
+                mouseOver('selection', $event, { item, selIndex: index })
+              "
+              @mouseleave="
+                mouseOver('selection', $event, { item, selIndex: index })
+              "
             >
               <template v-if="item.waypoint">
                 <span>Waypoint # {{ item.waypoint.index }}</span>
@@ -200,6 +207,7 @@
       v-if="!mapLoading && editor"
       :mapImageURL="mapImageURL"
       :editor="editor"
+      :selection="selectionWithHL"
     />
   </div>
 </template>
@@ -228,8 +236,17 @@ export default {
       4096: "4x",
       8192: "8x",
     },
+    highlight: {
+      selection: null,
+    },
   }),
   computed: {
+    selectionWithHL() {
+      return this.editor.selection.map((item, index) => {
+        item.highlight = this.highlight.selection === index;
+        return item;
+      });
+    },
     factor() {
       if (!this.editor || !this.editor.map.size) {
         return null;
@@ -284,6 +301,20 @@ export default {
     },
     wptDragged(event) {
       this.editor.wptDragged(event);
+    },
+    mouseOver(elementType, event, data) {
+
+      if (elementType === "selection") {
+        let { selIndex } = data;
+
+        if (event.type === "mouseenter") {
+          this.highlight.selection = selIndex;
+        }
+
+        if (event.type === "mouseleave") {
+          this.highlight.selection = null;
+        }
+      }
     },
   },
 };

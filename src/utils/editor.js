@@ -559,7 +559,11 @@ export default class Editor {
     }
   }
 
-  toolAction({ action, data, label, rebuildPaths }, option, highlightEventType) {
+  toolAction(
+    { action, data, label, rebuildPaths },
+    option,
+    highlightEventType
+  ) {
     if (option) {
       if (option.data !== undefined) {
         data = option.data;
@@ -578,17 +582,6 @@ export default class Editor {
         rebuildPaths,
       });
     }
-  }
-
-  deleteKeyAction(event) {
-    return (
-      event.code === "Delete" &&
-      !event.ctrlKey &&
-      !event.shiftKey &&
-      !event.altKey &&
-      !event.metaKey &&
-      !event.repeat
-    );
   }
 
   selectionWaypointsAndPaths() {
@@ -616,6 +609,17 @@ export default class Editor {
     return { wpts, paths };
   }
 
+  deleteKeyAction(event) {
+    return (
+      event.code === "Delete" &&
+      !event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.repeat
+    );
+  }
+
   keyUp(event) {
     let action;
 
@@ -640,6 +644,29 @@ export default class Editor {
         rebuildPaths: true,
       };
     }
+
+    if (
+      event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.repeat
+    ) {
+      if (event.code === "KeyZ") {
+        this.undo();
+        return true;
+      }
+      if (event.code === "KeyY") {
+        this.redo();
+        return true;
+      }
+      if (event.code === "KeyS") {
+        this.map.save();
+        return true;
+      }
+    }
+
+    console.debug(event);
 
     return this.doneaction(action);
   }

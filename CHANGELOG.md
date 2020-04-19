@@ -3,6 +3,7 @@
 ## v0.0.6-PRE
 feat(selection): ✨ highlight selected item on map when mouse is over item in selection list
 feat(alignment): ✨ highlight aligment line on map when mouse is over tool button
+feat(ui): :lipstick: New keyboard shortcuts: CTRL+Z (undo) CTRL+Y (redo) and CTRL+S (save)
 
 ## v0.0.5-PRE5
 ci: use marvinpinto/action-automatic-releases

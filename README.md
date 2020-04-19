@@ -17,7 +17,7 @@ Online publishing is meant for _testing only_.
   - [x] alignment,
   - [x] link type toggling for the entire path.
 
-- Reads and saves XML route file formats:
+- Reads and saves (ctrl + S) XML route file formats:
 
   - [x] "standard" config.xml files (from gamesave folder);
   - [x] "routesManager" route.xml files (from the autoDrive\routesManager\routes folder)
@@ -68,7 +68,7 @@ Online publishing is meant for _testing only_.
 
 - [ ] TODO: Markers and folders management
 
-- [x] Unlimited Undo/Redo levels (if not by browser memory restrictions)
+- [x] Unlimited Undo (ctrl + Z) / Redo (ctrl + Y) levels (if not by browser memory restrictions)
 
 - [ ] TODO: online/contextual help, documentation
       _(currently this document is the only source of information)_

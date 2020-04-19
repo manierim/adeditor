@@ -32,8 +32,8 @@ The project is currently in early - prototyping - stage.
   - [x] is always scaled correctly to map size
         _(no issues with 2048x2048 PDA map images in 4x or 8x maps)_;
   - accepted formats
-    - [ ] TODO: DDS _(directly from map .zip file)_;
-    - [x] PNG _(converted from DDS with tools like [Paint.net](https://www.getpaint.net/))_;
+    - [x] DDS _(directly from map .zip file)_ can be downloaded as converted .png;
+    - [x] PNG _(converted from DDS by adeditor or with tools like [Paint.net](https://www.getpaint.net/))_;
 
 - Manage items on map with mouse clicks + key modifiers (no need to "switch tool"):
 

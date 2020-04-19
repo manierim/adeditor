@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.8-PRE
+feat(io): :sparkles: Read DDS map images and convert to PNG
+
 ## v0.0.7-PRE
 fix(ui): :bug: CTRL+S not preventing browser default action
 

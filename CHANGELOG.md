@@ -1,5 +1,8 @@
 # Changelog
 
+## master
+refactor(ui): 💄 Move tool description to title attr to save space
+
 ## v0.0.9-PRE
 chore: :speech_balloon: Terminology change from "path" to "branch"
 

@@ -431,7 +431,7 @@ export default class Editor {
           end: wpts.slice(-1)[0],
           wpts: wpts.slice(1, -1),
         },
-        title:
+        description:
           "Align " +
           wpts.length +
           " wpts in selection along a line from # " +
@@ -463,7 +463,7 @@ export default class Editor {
             end: this.lastAlignment.end,
             wpts,
           },
-          title:
+          description:
             "Align " +
             wpts.length +
             " wpts in selection along a line from # " +
@@ -480,7 +480,7 @@ export default class Editor {
       let options;
 
       if (alignOptions.length === 1) {
-        description = alignOptions[0].title;
+        description = alignOptions[0].description;
         data = alignOptions[0].data;
       } else {
         options = alignOptions;

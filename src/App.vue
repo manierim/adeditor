@@ -91,6 +91,7 @@
                 }
               "
               class="inline-flex items-stretch bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded"
+              :title="toolInstance.description"
             >
               <span
                 class="material-icons fill-current mr-1"
@@ -117,7 +118,7 @@
                   "
                   @click="toolAction(toolInstance, option)"
                   class="flex w-full items-stretch bg-gray-300 hover:bg-gray-400 p-1 whitespace-no-wrap"
-                  :title="option.title"
+                  :title="option.description"
                 >
                   <span
                     v-if="option.icon"
@@ -129,11 +130,6 @@
               </li>
             </ul>
 
-            <div
-              v-if="toolInstance.description"
-              class="flex italic text-xs"
-              v-text="toolInstance.description"
-            ></div>
           </div>
         </Card>
 

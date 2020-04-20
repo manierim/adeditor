@@ -1,6 +1,6 @@
 # Changelog
 
-## master
+## v0.0.10-PRE
 refactor(ui): 💄 use v-tooltip instead of title attr
 build(ui): ➕ add v-tooltip
 fix(ui): 🐛 make sure selection highlighting is emptied after key command execution

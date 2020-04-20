@@ -91,7 +91,7 @@
                 }
               "
               class="inline-flex items-stretch bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-2 rounded"
-              :title="toolInstance.description"
+              v-tooltip.right="toolInstance.description"
             >
               <span
                 class="material-icons fill-current mr-1"
@@ -118,7 +118,7 @@
                   "
                   @click="toolAction(toolInstance, option)"
                   class="flex w-full items-stretch bg-gray-300 hover:bg-gray-400 p-1 whitespace-no-wrap"
-                  :title="option.description"
+                  v-tooltip.right="option.description"
                 >
                   <span
                     v-if="option.icon"
@@ -146,7 +146,7 @@
                 class="w-full border shadow"
                 @click="undo"
                 v-if="editor.actions.length"
-                :title="editor.actions.slice(-1)[0].label"
+                v-tooltip.top="editor.actions.slice(-1)[0].label"
               >
                 Undo
               </button>
@@ -156,7 +156,7 @@
                 class="w-full  border shadow"
                 @click="redo"
                 v-if="editor.redoables.length"
-                :title="editor.redoables.slice(-1)[0].label"
+                v-tooltip.top="editor.redoables.slice(-1)[0].label"
               >
                 Redo
               </button>

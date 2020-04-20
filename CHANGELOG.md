@@ -1,8 +1,10 @@
 # Changelog
 
 ## master
-refactor(ui): 💄 Move tool description to title attr to save space
+refactor(ui): 💄 use v-tooltip instead of title attr
+build(ui): ➕ add v-tooltip
 fix(ui): 🐛 make sure selection highlighting is emptied after key command execution
+refactor(ui): 💄 Move tool description to title attr to save space
 
 ## v0.0.9-PRE
 chore: :speech_balloon: Terminology change from "path" to "branch"

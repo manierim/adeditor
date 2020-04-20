@@ -41,7 +41,7 @@
 
 <script>
 import { mapFromXMLFile } from "../utils/routeparser";
-const dds = () => import("../utils/dds.js");
+const dds = () => import(/* webpackChunkName: "dds"*/ "../utils/dds.js");
 
 export default {
   name: "LoadRoute",

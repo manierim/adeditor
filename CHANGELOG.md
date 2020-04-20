@@ -1,5 +1,9 @@
 # Changelog
 
+## master
+
+build: ⚡ dds import as a separate chunk
+
 ## v0.0.10-PRE
 
 refactor(ui): 💄 use v-tooltip instead of title attr

@@ -17,6 +17,7 @@
     "parse-dds": "^1.2.1",
     "svg-pan-zoom": "^3.6.1",
     "typeface-roboto": "^0.0.75",
+    "v-tooltip": "^2.0.3",
     "vue": "^2.6.11",
     "xml2js": "^0.4.23"
   },

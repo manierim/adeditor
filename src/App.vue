@@ -275,6 +275,7 @@ export default {
   mounted() {
     window.addEventListener("keydown", (event) => {
       if (this.editor && this.editor.keyUp(event)) {
+        this.highlight.selection = null;
         event.preventDefault();
       }
     });

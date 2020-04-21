@@ -2,6 +2,8 @@
 
 ## master
 
+refactor: 🚚 move css to own assets folder and use style.css entry point
+
 build: 🐛 whitelist tooltip css in purgecss config
 
 build: ⚡ dds import as a separate chunk

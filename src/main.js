@@ -1,12 +1,10 @@
 import Vue from "vue";
-
-import "./assets/tooltips.css";
 import VTooltip from "v-tooltip";
-Vue.use(VTooltip);
+import "./assets/css/style.css";
+import "typeface-roboto";
+import "material-icons";
 
-require("typeface-roboto");
-require("material-icons");
-import "./assets/tailwind.css";
+Vue.use(VTooltip);
 
 Vue.config.productionTip = false;
 

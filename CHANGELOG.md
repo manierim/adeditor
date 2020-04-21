@@ -1,12 +1,16 @@
 # Changelog
 
+## v0.0.12-PRE
+
+feat(selection): ✨ sort and remove items. Expand branch into waypoints
+
 ## v0.0.11-PRE
 
-refactor: 🚚 move css to own assets folder and use style.css entry point
+refactor: 🚚 move CSS to own assets folder and use style.css entry point
 
-build: 🐛 whitelist tooltip css in purgecss config
+build: 🐛 whitelist tooltip CSS in purgecss config
 
-build: ⚡ dds import as a separate chunk
+build: ⚡ DDS import as a separate chunk
 
 ## v0.0.10-PRE
 
@@ -32,9 +36,9 @@ fix(ui): :bug: CTRL+S not preventing browser default action
 
 ## v0.0.6-PRE
 
-feat(selection): ✨ highlight selected item on map when mouse is over item in selection list
+feat(selection): ✨ highlight selected item on the map when the mouse is over an item in the selection list
 
-feat(alignment): ✨ highlight aligment line on map when mouse is over tool button
+feat(alignment): ✨ highlight the aligment line on the map when the mouse is over tool button
 
 feat(ui): :lipstick: New keyboard shortcuts: CTRL+Z (undo) CTRL+Y (redo) and CTRL+S (save)
 

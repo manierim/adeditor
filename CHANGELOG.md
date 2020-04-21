@@ -2,6 +2,8 @@
 
 ## master
 
+build: 🐛 whitelist tooltip css in purgecss config
+
 build: ⚡ dds import as a separate chunk
 
 ## v0.0.10-PRE

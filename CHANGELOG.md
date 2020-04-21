@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.13-PRE
+
+fix: 🐛 Delete a branch leaves the first and last node
+
 ## v0.0.12-PRE
 
 feat(selection): ✨ sort and remove items. Expand branch into waypoints
@@ -38,7 +42,7 @@ fix(ui): :bug: CTRL+S not preventing browser default action
 
 feat(selection): ✨ highlight selected item on the map when the mouse is over an item in the selection list
 
-feat(alignment): ✨ highlight the aligment line on the map when the mouse is over tool button
+feat(alignment): ✨ highlight the alignment line on the map when the mouse is over tool button
 
 feat(ui): :lipstick: New keyboard shortcuts: CTRL+Z (undo) CTRL+Y (redo) and CTRL+S (save)
 

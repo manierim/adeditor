@@ -758,17 +758,24 @@ export default class Editor {
     let action;
 
     if (this.deleteKeyAction(event)) {
-      let { wpts } = this.selectionWaypointsAndBranches();
-      if (!wpts.length) {
-        return;
-      }
-
+      let items = this.selection.slice(0);
       let actions = [this.executor.selectionReplace([])];
 
-      wpts.forEach((wpt) => {
-        let done = this.executor.removeWaypoint(wpt);
-        if (done) {
-          actions.push(done);
+      items.forEach(({ waypoint, branch }) => {
+        if (waypoint) {
+          let done = this.executor.removeWaypoint(waypoint);
+          if (done) {
+            actions.push(done);
+          }
+        }
+
+        if (branch) {
+          branch.wpts.slice(1, -1).forEach((wpt) => {
+            let done = this.executor.removeWaypoint(wpt);
+            if (done) {
+              actions.push(done);
+            }
+          });
         }
       });
 

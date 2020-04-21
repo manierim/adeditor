@@ -1,6 +1,6 @@
 # Changelog
 
-## master
+## v0.0.11-PRE
 
 refactor: 🚚 move css to own assets folder and use style.css entry point
 

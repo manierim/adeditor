@@ -48,8 +48,8 @@ The project is currently in an early - prototyping - stage.
   - [x] new selection (click);
   - [x] add/remove to selection (ctrl + click);
   - [x] delete waypoints in selection (del);
-  - [ ] TODO: expand selection of a Branch into selection of all its waypoints;
-  - [ ] TODO: changhe sorting of items in selection;
+  - [x] expand selection of a Branch into selection of all its waypoints;
+  - [x] changhe sorting of items in selection;
   - [ ] TODO: hide or only show selection;
   - [ ] TODO: select all unconnected waypoints _(for quick delete)_;
   - [ ] TODO: select all branches & their waypoints inside a region (left click & drag, + ctrl to add to selection);

@@ -49,6 +49,40 @@ class actionExecutor {
     };
   }
 
+  selectionInsert(data, reverse) {
+    let { index, item } = data;
+    if (!reverse) {
+      this.editor.selection.splice(index, 0, item);
+    } else {
+      this.editor.selection.splice(index, 1);
+    }
+    return {
+      action: "selectionInsert",
+      data,
+    };
+  }
+
+  selectionMove(data) {
+    let { index, toIndex } = data;
+    if (index >= this.editor.selection.length) {
+      index = this.editor.selection.length - 1;
+    }
+
+    this.editor.selection.splice(
+      toIndex,
+      0,
+      this.editor.selection.splice(index, 1)[0]
+    );
+
+    return {
+      action: "selectionMove",
+      data: {
+        index: toIndex,
+        toIndex: index,
+      },
+    };
+  }
+
   selectionAdd(data, reverse) {
     if (!reverse) {
       this.editor.selection.push(data);
@@ -61,6 +95,35 @@ class actionExecutor {
     return {
       action: "selectionAdd",
       data,
+    };
+  }
+
+  selectionRemoveItems({ start, count, removed }, reverse) {
+    if (!reverse) {
+      let removed = this.editor.selection.splice(start, count);
+      return {
+        action: "selectionRemoveItems",
+        data: {
+          start,
+          removed,
+        },
+      };
+    }
+    this.editor.selection.splice(start, 0, ...removed);
+    return {
+      action: "selectionRemoveItems",
+      data: {
+        start,
+        count: removed.length,
+      },
+    };
+  }
+
+  reverseSelection() {
+    this.editor.selection.reverse();
+
+    return {
+      action: "reverseSelection",
     };
   }
 
@@ -367,7 +430,8 @@ export default class Editor {
       actions: undo.actions
         .slice(0)
         .reverse()
-        .map(({ action, data }) => this.executor[action](data, true)),
+        .map(({ action, data }) => this.executor[action](data, true))
+        .reverse(),
     });
 
     if (undo.rebuildBranches) {
@@ -532,7 +596,8 @@ export default class Editor {
       }
 
       let icon = "timeline";
-      let description = "Change all links in branch # " + branches[0].index + " to ";
+      let description =
+        "Change all links in branch # " + branches[0].index + " to ";
       let option;
 
       if (options.length === 1) {
@@ -557,6 +622,75 @@ export default class Editor {
         rebuildBranches: true,
       });
     }
+  }
+
+  selectionItemCmd({ item, index, cmd }) {
+    let action;
+
+    if (cmd.value === "expand") {
+      let actions = [this.executor.selectionRemoveAtIndex(index)];
+
+      item.branch.wpts
+        .slice(0)
+        .reverse()
+        .forEach((wpt) => {
+          actions.push(
+            this.executor.selectionInsert({
+              index,
+              item: { waypoint: wpt },
+            })
+          );
+        });
+
+      action = {
+        label: "Expand selection branch #" + item.branch.index,
+        actions,
+      };
+    }
+
+    if (cmd.value === "remove") {
+      action = {
+        label: "Remove item from selection",
+        actions: [this.executor.selectionRemoveAtIndex(index)],
+      };
+    }
+
+    if (cmd.value === "removeBefore" || cmd.value === "removeAfter") {
+      let start = cmd.value === "removeBefore" ? 0 : index + 1;
+      let count =
+        cmd.value === "removeBefore"
+          ? index
+          : this.selection.length - (index + 1);
+
+      action = {
+        label: "Remove items from selection",
+        actions: [this.executor.selectionRemoveItems({ start, count })],
+      };
+    }
+
+    let toIndex;
+
+    if (cmd.value == "top") {
+      toIndex = 0;
+    }
+    if (cmd.value == "up") {
+      toIndex = index - 1;
+    }
+    if (cmd.value == "down") {
+      toIndex = index + 1;
+    }
+    if (cmd.value == "bottom") {
+      toIndex = this.selection.length;
+    }
+
+    if (toIndex !== undefined) {
+      action = {
+        label: cmd.label + " selection item ",
+        actions: [this.executor.selectionMove({ index, toIndex })],
+      };
+    }
+
+    this.doneaction(action);
   }
 
   toolAction(
@@ -675,9 +809,22 @@ export default class Editor {
       actions: [this.executor.movedWaypoint({ waypoint, dragstart })],
     });
   }
-  mapClick({ event, svgpoint }) {
-    let action;
 
+  reverseSelection() {
+    this.doneaction({
+      label: "Reverse selection",
+      actions: [this.executor.reverseSelection()],
+    });
+  }
+
+  emptySelection() {
+    this.doneaction({
+      label: "Empty selection",
+      actions: [this.executor.selectionReplace([])],
+    });
+  }
+
+  mapClick({ event, svgpoint }) {
     if (
       this.selection.length &&
       !event.ctrlKey &&
@@ -685,11 +832,10 @@ export default class Editor {
       !event.altKey &&
       !event.metaKey
     ) {
-      action = {
-        label: "Empty selection",
-        actions: [this.executor.selectionReplace([])],
-      };
+      this.emptySelection();
+      return;
     }
+    let action;
 
     if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
       let y = this.map

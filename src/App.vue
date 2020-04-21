@@ -33,34 +33,78 @@
           </template>
           <ul>
             <li
-              class="hover:bg-pink-300"
-              v-for="(item, index) in editor.selection.filter((item) => item)"
-              :key="index"
-              @mouseenter="
-                mouseOver('selection', $event, { item, selIndex: index })
-              "
-              @mouseleave="
-                mouseOver('selection', $event, { item, selIndex: index })
-              "
+              v-for="(item, index) in editor.selection"
+              :key="selectionItemKey(item)"
+              @mouseenter="mouseOver('selection', $event, { item })"
+              @mouseleave="mouseOver('selection', $event, { item })"
             >
-              <template v-if="item.waypoint">
-                <span>Waypoint # {{ item.waypoint.index }}</span>
-                <span
-                  v-if="item.waypoint.marker"
-                  v-text="item.waypoint.marker.name"
-                  class="ml-1 font-bold"
-                />
-              </template>
-              <template v-if="item.branch">
-                <span
-                  >Branch # {{ item.branch.index }} ({{
-                    item.branch.wpts.length
-                  }}
-                  wpts)</span
-                >
-              </template>
+              <v-popover
+                :disabled="selectionItemCmds(item, index).length === 0"
+                placement="right"
+                openClass="bg-pink-300"
+                class="v-popover--block cursor-pointer hover:bg-pink-300"
+                popoverInnerClass="bg-gray-200 p-2 rounded shadow flex flex-row"
+              >
+                <div class="tooltip-target">
+                  <div v-if="item.waypoint">
+                    <span>Waypoint # {{ item.waypoint.index }}</span>
+                    <span
+                      v-if="item.waypoint.marker"
+                      v-text="item.waypoint.marker.name"
+                      class="ml-1 font-bold"
+                    />
+                  </div>
+                  <div v-if="item.branch">
+                    <span
+                      >Branch # {{ item.branch.index }} ({{
+                        item.branch.wpts.length
+                      }}
+                      wpts)</span
+                    >
+                  </div>
+                </div>
+
+                <template slot="popover">
+                  <div
+                    class="flex-col mb-1"
+                    v-for="cmdGroup in selectionItemCmds(item, index)"
+                    :key="cmdGroup.group"
+                    @mouseenter="mouseOver('selection', $event, { item })"
+                    @mouseleave="mouseOver('selection', $event, { item })"
+                  >
+                    <button
+                      @click="selectionItemCmd({ item, index, cmd })"
+                      v-for="cmd in cmdGroup.cmds"
+                      :key="cmd.value"
+                      class="flex bg-gray-300 hover:bg-gray-400 p-1 whitespace-no-wrap"
+                      v-tooltip.right="cmd.label"
+                    >
+                      <span
+                        class="material-icons fill-current"
+                        v-text="cmd.icon"
+                      />
+                    </button>
+                  </div>
+                </template>
+              </v-popover>
             </li>
           </ul>
+          <div class="flex flex-row text-xs">
+            <button
+              v-if="editor.selection.length"
+              @click="emptySelection"
+              class="m-1 p1 w-full border shadow has-tooltip"
+            >
+              Empty
+            </button>
+            <button
+              v-if="editor.selection.length > 1"
+              @click="reverseSelection"
+              class="m-1 p1 w-full border shadow has-tooltip"
+            >
+              Reverse
+            </button>
+          </div>
         </Card>
 
         <Card :collapsable="false" class="flex-grow mb-2">
@@ -129,7 +173,6 @@
                 </button>
               </li>
             </ul>
-
           </div>
         </Card>
 
@@ -254,8 +297,9 @@ export default {
   }),
   computed: {
     selectionWithHL() {
-      return this.editor.selection.map((item, index) => {
-        item.highlight = this.highlight.selection === index;
+      return this.editor.selection.map((item) => {
+        item.highlight =
+          this.highlight.selection === this.selectionItemKey(item);
         return item;
       });
     },
@@ -282,6 +326,115 @@ export default {
   },
 
   methods: {
+    selectionItemKey(item) {
+      if (item.waypoint) {
+        return "waypoint-" + item.waypoint.index;
+      }
+      if (item.branch) {
+        return "branch-" + item.branch.index;
+      }
+    },
+    selectionItemCmds(item, index) {
+      let grps = [];
+
+      let cmds = [];
+
+      if (index > 1) {
+        cmds.push({
+          label: "Move to top",
+          icon: "vertical_align_top",
+          value: "top",
+        });
+      }
+      if (index > 0) {
+        cmds.push({
+          label: "Move up",
+          icon: "keyboard_arrow_up",
+          value: "up",
+        });
+      }
+
+      let lastIndex = this.editor.selection.length - 1;
+
+      if (index < lastIndex) {
+        cmds.push({
+          label: "Move down",
+          icon: "keyboard_arrow_down",
+          value: "down",
+        });
+      }
+
+      if (index < lastIndex - 1) {
+        cmds.push({
+          label: "Move to bottom",
+          icon: "vertical_align_bottom",
+          value: "bottom",
+        });
+      }
+
+      if (cmds.length) {
+        grps.push({
+          group: "move",
+          cmds,
+        });
+      }
+
+      if (item.branch) {
+        grps.push({
+          group: "branch",
+          cmds: [
+            {
+              label: "Expand to wapypoints",
+              icon: "open_with",
+              value: "expand",
+            },
+          ],
+        });
+      }
+
+      cmds = [];
+
+      if (index > 1) {
+        cmds.push({
+          label: "Remove all before",
+          icon: "vertical_align_bottom",
+          value: "removeBefore",
+        });
+      }
+
+      cmds.push({
+        label: "Remove from selection",
+        icon: "delete",
+        value: "remove",
+      });
+
+      if (index < lastIndex) {
+        cmds.push({
+          label: "Remove all after",
+          icon: "vertical_align_top",
+          value: "removeAfter",
+        });
+      }
+
+      grps.push({
+        group: "remove",
+        cmds,
+      });
+
+      return grps;
+    },
+
+    emptySelection() {
+      this.editor.emptySelection();
+    },
+
+    reverseSelection() {
+      this.editor.reverseSelection();
+    },
+
+    selectionItemCmd(params) {
+      this.editor.selectionItemCmd(params);
+    },
     async saveMap() {
       if (!this.editor || !this.editor.map) {
         return;
@@ -317,10 +470,10 @@ export default {
     },
     mouseOver(elementType, event, data) {
       if (elementType === "selection") {
-        let { selIndex } = data;
+        let { item } = data;
 
         if (event.type === "mouseenter") {
-          this.highlight.selection = selIndex;
+          this.highlight.selection = this.selectionItemKey(item);
         }
 
         if (event.type === "mouseleave") {
@@ -338,6 +491,13 @@ export default {
   },
 };
 </script>
+
+<style>
+.v-popover--block,
+.v-popover--block > .trigger {
+  display: block !important;
+}
+</style>
 
 <style scoped>
 input[type="number"] {

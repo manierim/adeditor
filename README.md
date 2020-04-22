@@ -80,7 +80,7 @@ The project is currently in an early - prototyping - stage.
 Currently, the entire map is always rendered as a single pannable/zoomable SVG.
 When the number of rendered links is above a few hundreds the browser starts to struggle.
 
-A possible solution might be to only render the currently visible portion and/or dynamically reduce the LOD basing on the zoom factor; alternatively also switch to canvas rendering.
+A possible solution might be to only render the currently visible portion and/or dynamically reduce the LOD basing on the zoom factor. ~~; alternatively also switch to canvas rendering (tested with [Paper.js](http://paperjs.org/): slower with 3000 links)~~
 
 ### Slow update after links creation/deletion
 

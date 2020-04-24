@@ -10,16 +10,16 @@ export default class parser {
   getContentForSave(wptsArray, markers) {
     let wptsRoot = this.xml.routeExport.waypoints[0];
 
-    let indexMap = wptsArray.map(wpt => parseInt(wpt.index));
+    let indexMap = wptsArray.map((wpt) => parseInt(wpt.index));
 
     wptsRoot["$"].c = wptsArray.length;
 
-    wptsRoot["x"] = wptsArray.map(wpt => wpt.x).join(";");
-    wptsRoot["y"] = wptsArray.map(wpt => wpt.y).join(";");
-    wptsRoot["z"] = wptsArray.map(wpt => wpt.z).join(";");
+    wptsRoot["x"] = wptsArray.map((wpt) => wpt.x).join(";");
+    wptsRoot["y"] = wptsArray.map((wpt) => wpt.y).join(";");
+    wptsRoot["z"] = wptsArray.map((wpt) => wpt.z).join(";");
 
     function links(list) {
-      list = list.map(idx => indexMap.indexOf(idx) + 1);
+      list = list.map((idx) => indexMap.indexOf(idx) + 1);
       if (!list.length) {
         list.push(-1);
       }
@@ -27,46 +27,54 @@ export default class parser {
     }
 
     wptsRoot["out"] = wptsArray
-      .map(wpt => links(wpt.existingOuts()).join(","))
+      .map((wpt) => links(wpt.existingOuts()).join(","))
       .join(";");
     wptsRoot["in"] = wptsArray
-      .map(wpt => links(wpt.existingIns()).join(","))
+      .map((wpt) => links(wpt.existingIns()).join(","))
       .join(";");
 
     let defaultFolder = "All";
 
     let folders = [defaultFolder];
 
-    this.xml.routeExport.markers[0]["m"] = markers.map(marker => {
-      let folder = marker.folder ? marker.folder : defaultFolder;
-      if (folders.indexOf(folder) === -1) {
-        folders.push(folder);
+    if (!markers || !markers.length) {
+      if (this.xml.routeExport.markers) {
+        delete this.xml.routeExport.markers;
       }
-      return {
-        $: {
-          i: indexMap.indexOf(parseInt(marker.wpt.index)) + 1,
-          n: marker.name,
-          g: folder
+    } else {
+      if (!this.xml.routeExport.markers) {
+        this.xml.routeExport.markers = [];
+      }
+      this.xml.routeExport.markers[0]["m"] = markers.map((marker) => {
+        let folder = marker.folder ? marker.folder : defaultFolder;
+        if (folders.indexOf(folder) === -1) {
+          folders.push(folder);
         }
-      };
-    });
+        return {
+          $: {
+            i: indexMap.indexOf(parseInt(marker.wpt.index)) + 1,
+            n: marker.name,
+            g: folder,
+          },
+        };
+      });
+    }
 
-    this.xml.routeExport.groups[0]["g"] = folders.map(folder => {
+    this.xml.routeExport.groups[0]["g"] = folders.map((folder) => {
       return {
         $: {
-          n: folder
-        }
+          n: folder,
+        },
       };
     });
 
     let xml2js = require("xml2js");
 
     let builder = new xml2js.Builder({
-      headless: true
+      headless: true,
     });
 
     return builder.buildObject(this.xml);
-
   }
 
   parse() {
@@ -77,7 +85,7 @@ export default class parser {
       z: null,
       outs: null,
       ins: null,
-      markers: null
+      markers: null,
     };
 
     let root = this.xml.routeExport;
@@ -123,11 +131,11 @@ export default class parser {
     response.markers = [];
 
     if (root.markers) {
-      root.markers[0].m.forEach(marker => {
+      root.markers[0].m.forEach((marker) => {
         response.markers.push({
           index: parseInt(marker.$.i),
           name: marker.$.n,
-          folder: marker.$.g
+          folder: marker.$.g,
         });
       });
     }

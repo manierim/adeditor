@@ -16,7 +16,7 @@ export default class parser {
       z: null,
       outs: null,
       ins: null,
-      markers: null
+      markers: null,
     };
 
     let root;
@@ -89,7 +89,7 @@ export default class parser {
         response.markers.push({
           index: parseInt(marker.id[0]),
           name: marker.name[0],
-          folder: marker.group[0]
+          folder: marker.group[0],
         });
       }
     }
@@ -99,17 +99,17 @@ export default class parser {
   getContentForSave(wptsArray, markers) {
     let wptsRoot = this.xml.AutoDrive[this.mapname][0].waypoints[0];
 
-    let indexMap = wptsArray.map(wpt => parseInt(wpt.index));
+    let indexMap = wptsArray.map((wpt) => parseInt(wpt.index));
 
     wptsRoot["id"] = wptsArray
-      .map(wpt => indexMap.indexOf(wpt.index) + 1)
+      .map((wpt) => indexMap.indexOf(wpt.index) + 1)
       .join(",");
-    wptsRoot["x"] = wptsArray.map(wpt => wpt.x).join(",");
-    wptsRoot["y"] = wptsArray.map(wpt => wpt.y).join(",");
-    wptsRoot["z"] = wptsArray.map(wpt => wpt.z).join(",");
+    wptsRoot["x"] = wptsArray.map((wpt) => wpt.x).join(",");
+    wptsRoot["y"] = wptsArray.map((wpt) => wpt.y).join(",");
+    wptsRoot["z"] = wptsArray.map((wpt) => wpt.z).join(",");
 
     function links(list) {
-      list = list.map(idx => indexMap.indexOf(idx) + 1);
+      list = list.map((idx) => indexMap.indexOf(idx) + 1);
       if (!list.length) {
         list.push(-1);
       }
@@ -117,23 +117,28 @@ export default class parser {
     }
 
     wptsRoot["out"] = wptsArray
-      .map(wpt => links(wpt.existingOuts()).join(","))
+      .map((wpt) => links(wpt.existingOuts()).join(","))
       .join(";");
     wptsRoot["incoming"] = wptsArray
-      .map(wpt => links(wpt.existingIns()).join(","))
+      .map((wpt) => links(wpt.existingIns()).join(","))
       .join(";");
 
     let defaultFolder = "All";
 
-    this.xml.AutoDrive[this.mapname][0].mapmarker = {};
-
-    markers.forEach((marker, idx) => {
-      this.xml.AutoDrive[this.mapname][0].mapmarker["mm" + (idx + 1)] = {
-        id: indexMap.indexOf(parseInt(marker.wpt.index)) + 1,
-        name: marker.name,
-        group: marker.folder ? marker.folder : defaultFolder
-      };
-    });
+    if (markers.length) {
+      this.xml.AutoDrive[this.mapname][0].mapmarker = {};
+      markers.forEach((marker, idx) => {
+        this.xml.AutoDrive[this.mapname][0].mapmarker["mm" + (idx + 1)] = {
+          id: indexMap.indexOf(parseInt(marker.wpt.index)) + 1,
+          name: marker.name,
+          group: marker.folder ? marker.folder : defaultFolder,
+        };
+      });
+    } else {
+      if (this.xml.AutoDrive[this.mapname][0].mapmarker) {
+        delete this.xml.AutoDrive[this.mapname][0].mapmarker;
+      }
+    }
 
     let xml2js = require("xml2js");
 
@@ -142,11 +147,10 @@ export default class parser {
       xmldec: {
         version: "1.0",
         encoding: "UTF-8",
-        standalone: false
-      }
+        standalone: false,
+      },
     });
-    
-    return builder.buildObject(this.xml);
 
+    return builder.buildObject(this.xml);
   }
 }

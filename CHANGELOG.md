@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.15-PRE
+
+build: 🚑 Upgrade dependencies
+
 ## v0.0.14-PRE
 
 fix(io): 🐛 create or delete markers (targets) xml node as needed

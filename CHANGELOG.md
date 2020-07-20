@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.16-PRE
+
+build: 🚑 Upgrade dependencies
+
 ## v0.0.15-PRE
 
 build: 🚑 Upgrade dependencies

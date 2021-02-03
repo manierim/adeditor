@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.17-PRE
+
+perf: 🐛 Manage new AutoDrive_config.xml format
+build: 🚑 Upgrade dependencies
+
 ## v0.0.16-PRE
 
 build: 🚑 Upgrade dependencies

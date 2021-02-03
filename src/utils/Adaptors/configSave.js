@@ -20,22 +20,33 @@ export default class parser {
     };
 
     let root;
-    let mapname = this.fileName.match(/^AutoDrive_(.*)_config.xml$/);
+    let mapname;
 
-    if (mapname.length == 2) {
-      mapname = mapname[1];
+    if (this.xml.AutoDrive.MapName) {
+      mapname = this.xml.AutoDrive.MapName;
     } else {
-      response.error =
-        "Could not find map name in " + this.fileName + " filename.";
-      return response;
+      mapname = this.fileName.match(/^AutoDrive_(.*)_config.xml$/);
+
+      if (mapname.length == 2) {
+        mapname = mapname[1];
+      } else {
+        response.error =
+          "Could not find map name in " + this.fileName + " filename.";
+        return response;
+      }
     }
 
-    if (!this.xml.AutoDrive[mapname]) {
-      response.error =
-        "Could not find " + mapname + " element in xml document.";
-      return response;
+    if (this.xml.AutoDrive.waypoints) {
+      root = this.xml.AutoDrive;
+    } else {
+      if (!this.xml.AutoDrive[mapname]) {
+        response.error =
+          "Could not find " + mapname + " element in xml document.";
+        return response;
+      }
+      root = this.xml.AutoDrive[mapname][0];
     }
-    root = this.xml.AutoDrive[mapname][0];
+
     this.mapname = mapname;
 
     if (!root.waypoints || root.waypoints.length !== 1) {
